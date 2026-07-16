@@ -64,6 +64,17 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
+    // Backend length limits for spam control
+    if (title.length > 200) {
+      return { success: false, error: 'Project title exceeds maximum length of 200 characters.' };
+    }
+    if (abstract.length > 5000) {
+      return { success: false, error: 'Project abstract exceeds maximum length of 5000 characters.' };
+    }
+    if (caller_name.length > 100) {
+      return { success: false, error: 'Your name exceeds maximum length of 100 characters.' };
+    }
+
     // Strict regex email validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(caller_email.trim())) {
@@ -216,8 +227,11 @@ export async function fetchAllProjects() {
 /**
  * Approves a project call: sets status to 'active' and bumps created_at to NOW() (putting it at top of feed).
  */
-export async function approveProjectCall(projectId: string) {
+export async function approveProjectCall(projectId: string, adminPass: string) {
   if (!isDbConfigured()) return ENV_ERROR;
+  if (adminPass !== 'iykyk@things') {
+    return { success: false, error: 'Unauthorized: Invalid admin credentials.' };
+  }
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -244,8 +258,11 @@ export async function approveProjectCall(projectId: string) {
 /**
  * Deletes a project call: ensures related applicant bookings are deleted first to avoid FK constraint errors.
  */
-export async function deleteProjectCall(projectId: string) {
+export async function deleteProjectCall(projectId: string, adminPass: string) {
   if (!isDbConfigured()) return ENV_ERROR;
+  if (adminPass !== 'iykyk@things') {
+    return { success: false, error: 'Unauthorized: Invalid admin credentials.' };
+  }
   try {
     // 1. Delete associated applicant bookings first
     const { error: appDeleteError } = await supabase
@@ -288,6 +305,17 @@ export async function reserveProjectSlot(
   try {
     if (!applicant.name || !applicant.dept_sem || !applicant.linkedin_url) {
       return { success: false, error: 'Name, Dept/Sem, and LinkedIn URL are all required.' };
+    }
+
+    // Backend length limits for spam control
+    if (applicant.name.length > 100) {
+      return { success: false, error: 'Name exceeds maximum length of 100 characters.' };
+    }
+    if (applicant.dept_sem.length > 50) {
+      return { success: false, error: 'Department/Semester exceeds maximum length of 50 characters.' };
+    }
+    if (applicant.linkedin_url.length > 200) {
+      return { success: false, error: 'LinkedIn URL exceeds maximum length of 200 characters.' };
     }
 
     // Validate LinkedIn URL basic format
@@ -394,7 +422,10 @@ export async function fetchMentors() {
 /**
  * Adds a new mentor to the database.
  */
-export async function addMentor(mentor: { name: string; college: string; dept: string; contact: string }) {
+export async function addMentor(mentor: { name: string; college: string; dept: string; contact: string }, adminPass: string) {
+  if (adminPass !== 'iykyk@things') {
+    return { success: false, error: 'Unauthorized: Invalid admin credentials.' };
+  }
   if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { data, error } = await supabase
@@ -425,7 +456,10 @@ export async function addMentor(mentor: { name: string; college: string; dept: s
 /**
  * Updates an existing mentor in the database.
  */
-export async function updateMentor(mentor: { id: string; name: string; college: string; dept: string; contact: string }) {
+export async function updateMentor(mentor: { id: string; name: string; college: string; dept: string; contact: string }, adminPass: string) {
+  if (adminPass !== 'iykyk@things') {
+    return { success: false, error: 'Unauthorized: Invalid admin credentials.' };
+  }
   if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { data, error } = await supabase
@@ -457,7 +491,10 @@ export async function updateMentor(mentor: { id: string; name: string; college: 
 /**
  * Deletes a mentor from the database.
  */
-export async function deleteMentor(mentorId: string) {
+export async function deleteMentor(mentorId: string, adminPass: string) {
+  if (adminPass !== 'iykyk@things') {
+    return { success: false, error: 'Unauthorized: Invalid admin credentials.' };
+  }
   if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { error } = await supabase

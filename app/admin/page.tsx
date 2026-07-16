@@ -130,6 +130,14 @@ export default function AdminPage() {
     }
   }, [isAdminLoggedIn]);
 
+  // Helper to retrieve the current session admin password
+  const getAdminPass = (): string => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('iykyk_admin_pass') || '';
+    }
+    return '';
+  };
+
   // Handle Admin Authorization
   const handleAdminLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,6 +146,7 @@ export default function AdminPage() {
       setAdminError(false);
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('iykyk_admin_auth', 'true');
+        sessionStorage.setItem('iykyk_admin_pass', adminPass);
       }
     } else {
       setAdminError(true);
@@ -150,13 +159,14 @@ export default function AdminPage() {
     setAdminPass('');
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('iykyk_admin_auth');
+      sessionStorage.removeItem('iykyk_admin_pass');
     }
   };
 
   // Action: Approve Project Call
   const handleApprove = async (projectId: string) => {
     setActionMessage(null);
-    const res = await approveProjectCall(projectId);
+    const res = await approveProjectCall(projectId, getAdminPass());
     if (res.success) {
       setActionMessage({ type: 'success', text: 'Project call approved and pushed live to feed!' });
       loadData();
@@ -171,7 +181,7 @@ export default function AdminPage() {
     const confirmDelete = window.confirm('Are you sure you want to delete this project call? This will remove all applications.');
     if (!confirmDelete) return;
 
-    const res = await deleteProjectCall(projectId);
+    const res = await deleteProjectCall(projectId, getAdminPass());
     if (res.success) {
       setActionMessage({ type: 'success', text: 'Project call and related applicants successfully deleted.' });
       loadData();
@@ -213,7 +223,7 @@ export default function AdminPage() {
     } else {
       // Supabase database persistence
       if (editingMentorId) {
-        const res = await updateMentor({ id: editingMentorId, ...mentorData });
+        const res = await updateMentor({ id: editingMentorId, ...mentorData }, getAdminPass());
         if (res.success) {
           setActionMessage({ type: 'success', text: 'Mentor updated in Supabase successfully!' });
           loadMentorsData();
@@ -222,7 +232,7 @@ export default function AdminPage() {
           setActionMessage({ type: 'error', text: res.error || 'Failed to update mentor.' });
         }
       } else {
-        const res = await addMentor(mentorData);
+        const res = await addMentor(mentorData, getAdminPass());
         if (res.success) {
           setActionMessage({ type: 'success', text: 'Mentor added to Supabase successfully!' });
           loadMentorsData();
@@ -251,7 +261,7 @@ export default function AdminPage() {
       if (editingMentorId === id) resetMentorForm();
     } else {
       // Supabase database persistence
-      const res = await deleteMentor(id);
+      const res = await deleteMentor(id, getAdminPass());
       if (res.success) {
         setActionMessage({ type: 'success', text: 'Mentor deleted from Supabase successfully!' });
         loadMentorsData();
