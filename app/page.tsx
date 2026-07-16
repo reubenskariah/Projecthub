@@ -429,16 +429,16 @@ export default function HomePage() {
       {activeTab === 'feed' && (
         <div className="page-view active-view">
           <section className="hero" style={{ paddingTop: '24px' }}>
-            <div className="hero-block" style={{ border: '1.5px solid var(--blue-deep)', background: 'var(--white)', display: 'grid', gridTemplateColumns: '1.3fr 1fr', boxShadow: '6px 6px 0 var(--blue-deep)', borderRadius: 'var(--radius)', overflow: 'hidden', position: 'relative' }}>
+            <div className="hero-block">
               
               {/* Region 1: Left Side */}
-              <div className="hero-region-left" style={{ padding: '32px 32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'space-between', minHeight: '290px', gap: '14px' }}>
+              <div className="hero-region-left">
                 
                 {/* Top content block (Logo Icon and Logo Name + Quote) */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', width: '100%', textAlign: 'left', marginBottom: '12px' }}>
                   {/* Left: Logo Icon SVG (Enlarged) */}
                   <div style={{ flexShrink: 0, marginTop: '2px' }}>
-                    <svg style={{ width: '84px', height: 'auto', display: 'block' }} viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg style={{ width: 'clamp(60px, 12vw, 84px)', height: 'auto', display: 'block' }} viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M45 40 L75 40" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
                       <path d="M45 75 L75 75" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" />
                       <path d="M45 40 L45 75" stroke="#1E293B" strokeWidth="6" strokeLinecap="round" />
@@ -459,19 +459,19 @@ export default function HomePage() {
                   {/* Right: Logo Name and Quote */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
                     {/* Logo Name (Bigger size, aligned left, close to icon) */}
-                    <h1 style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: '72px', color: '#0f2a47', margin: 0, lineHeight: 0.85, letterSpacing: '-2.5px' }}>
+                    <h1 style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 'clamp(36px, 8vw, 72px)', color: '#0f2a47', margin: 0, lineHeight: 0.85, letterSpacing: '-2.5px' }}>
                       project<span style={{ color: '#2563EB', fontWeight: 900 }}>hub</span>
                     </h1>
                     
                     {/* Quote (Placed below name with a gap, color matching logo blue, uppercase, no quotes, sans font, shifted 0.3cm down and aligned below the 'r') */}
-                    <div className="hero-quote" style={{ fontFamily: 'var(--sans)', fontSize: '14px', letterSpacing: '-0.1px', color: '#2563EB', fontWeight: 700, textTransform: 'uppercase', paddingLeft: '40px', marginTop: '11px', lineHeight: 1.1 }}>
+                    <div className="hero-quote" style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(11px, 2.5vw, 14px)', letterSpacing: '-0.1px', color: '#2563EB', fontWeight: 700, textTransform: 'uppercase', paddingLeft: 'clamp(10px, 6vw, 40px)', marginTop: '11px', lineHeight: 1.1 }}>
                       you and your idea are not alone!
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom text block (Aligned to the starting edge of the logo icon) */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', textAlign: 'left', paddingLeft: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', textAlign: 'left', paddingLeft: 'clamp(0px, 2vw, 8px)', marginBottom: '8px' }}>
                   {/* Heading: Our Aim */}
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--amber-dim)', fontWeight: 700, marginBottom: '6px' }}>
                     Our Aim
@@ -497,7 +497,7 @@ export default function HomePage() {
               </div>
 
               {/* Region 2: Right Side with dotted boundary */}
-              <div className="hero-region-right" style={{ padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', borderLeft: '2px dotted var(--blue-deep)', background: 'rgba(238, 242, 238, 0.35)' }}>
+              <div className="hero-region-right">
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--amber-dim)', marginBottom: '8px', fontWeight: 700 }}>
                   CAMPUS MATCH STATISTICS
                 </div>

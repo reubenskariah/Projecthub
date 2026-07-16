@@ -276,6 +276,37 @@ nav.top-actions {
   padding: 40px 24px 8px;
 }
 
+.hero-block {
+  border: 1.5px solid var(--blue-deep);
+  background: var(--white);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  box-shadow: 6px 6px 0 var(--blue-deep);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-region-left {
+  padding: 32px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: 290px;
+  gap: 14px;
+}
+
+.hero-region-right {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  border-left: 2px dotted var(--blue-deep);
+  background: rgba(238, 242, 238, 0.35);
+}
+
 .titleblock {
   border: 1.5px solid var(--blue-deep);
   background: var(--white);
@@ -964,3 +995,47 @@ footer {
     transition: none !important;
   }
 }
+
+/* Mobile-optimizing rules for smaller screens */
+@media (max-width: 640px) {
+  .hero {
+    padding: 16px 12px 8px;
+  }
+  
+  .hero-region-left {
+    padding: 24px 16px 20px !important;
+  }
+  
+  .hero-region-right {
+    padding: 24px 16px !important;
+  }
+  
+  .toolbar {
+    padding: 0 12px;
+  }
+  
+  .grid {
+    padding: 12px 12px 40px;
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-head {
+    padding: 14px 16px;
+  }
+
+  .queue-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .queue-actions {
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+}
+
