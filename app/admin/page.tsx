@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { fetchPendingProjects, fetchAllProjects, approveProjectCall, deleteProjectCall } from '@/app/actions/projectActions';
+import { 
+  fetchPendingProjects, 
+  fetchAllProjects, 
+  approveProjectCall, 
+  deleteProjectCall,
+  fetchMentors,
+  addMentor,
+  updateMentor,
+  deleteMentor
+} from '@/app/actions/projectActions';
 
 interface Applicant {
   id?: string;
@@ -28,6 +37,24 @@ interface Project {
   applicants?: Applicant[];
 }
 
+interface Mentor {
+  id: string;
+  name: string;
+  college: string;
+  dept: string;
+  contact: string;
+  created_at?: string;
+}
+
+const DEFAULT_MENTORS: Mentor[] = [
+  { id: "1", name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
+  { id: "2", name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
+  { id: "3", name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
+  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
+  { id: "5", name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
+  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
+];
+
 export default function AdminPage() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -35,12 +62,21 @@ export default function AdminPage() {
   const [adminPass, setAdminPass] = useState('');
   const [adminError, setAdminError] = useState(false);
 
-  // Dashboard views: 'queue' (pending) or 'directory' (all/active)
-  const [adminTab, setAdminTab] = useState<'queue' | 'directory'>('queue');
+  // Dashboard views: 'queue' (pending), 'directory' (active projects), or 'mentors'
+  const [adminTab, setAdminTab] = useState<'queue' | 'directory' | 'mentors'>('queue');
   const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [isMentorsTableMissing, setIsMentorsTableMissing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Mentor form states
+  const [mName, setMName] = useState('');
+  const [mCollege, setMCollege] = useState('');
+  const [mDept, setMDept] = useState('');
+  const [mContact, setMContact] = useState('');
+  const [editingMentorId, setEditingMentorId] = useState<string | null>(null);
 
   // Check sessionStorage auth on mount to avoid SSR hydration mismatches
   useEffect(() => {
@@ -64,7 +100,28 @@ export default function AdminPage() {
     if (allRes.success && allRes.data) {
       setAllProjects(allRes.data as Project[]);
     }
+
+    await loadMentorsData();
     setLoading(false);
+  };
+
+  const loadMentorsData = async () => {
+    const mentorRes = await fetchMentors();
+    if (mentorRes.success && mentorRes.data) {
+      setMentors(mentorRes.data as Mentor[]);
+      setIsMentorsTableMissing(false);
+    } else if (mentorRes.isTableMissing) {
+      setIsMentorsTableMissing(true);
+      if (typeof window !== 'undefined') {
+        const local = localStorage.getItem('ph_mentors');
+        if (local) {
+          setMentors(JSON.parse(local));
+        } else {
+          setMentors(DEFAULT_MENTORS);
+          localStorage.setItem('ph_mentors', JSON.stringify(DEFAULT_MENTORS));
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -123,6 +180,106 @@ export default function AdminPage() {
     }
   };
 
+  // Action: Submit Mentor Form (Add or Edit)
+  const handleMentorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionMessage(null);
+
+    const mentorData = {
+      name: mName,
+      college: mCollege,
+      dept: mDept,
+      contact: mContact
+    };
+
+    if (isMentorsTableMissing) {
+      // LocalStorage local fallback
+      let updatedMentors = [...mentors];
+      if (editingMentorId) {
+        updatedMentors = updatedMentors.map((m) => 
+          m.id === editingMentorId ? { ...m, ...mentorData } : m
+        );
+        setActionMessage({ type: 'success', text: 'Mentor updated locally (localStorage fallback).' });
+      } else {
+        const newId = String(Date.now());
+        updatedMentors.push({ id: newId, ...mentorData });
+        setActionMessage({ type: 'success', text: 'Mentor added locally (localStorage fallback).' });
+      }
+      setMentors(updatedMentors);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ph_mentors', JSON.stringify(updatedMentors));
+      }
+      resetMentorForm();
+    } else {
+      // Supabase database persistence
+      if (editingMentorId) {
+        const res = await updateMentor({ id: editingMentorId, ...mentorData });
+        if (res.success) {
+          setActionMessage({ type: 'success', text: 'Mentor updated in Supabase successfully!' });
+          loadMentorsData();
+          resetMentorForm();
+        } else {
+          setActionMessage({ type: 'error', text: res.error || 'Failed to update mentor.' });
+        }
+      } else {
+        const res = await addMentor(mentorData);
+        if (res.success) {
+          setActionMessage({ type: 'success', text: 'Mentor added to Supabase successfully!' });
+          loadMentorsData();
+          resetMentorForm();
+        } else {
+          setActionMessage({ type: 'error', text: res.error || 'Failed to add mentor.' });
+        }
+      }
+    }
+  };
+
+  // Action: Delete Mentor Profile
+  const handleDeleteMentor = async (id: string) => {
+    setActionMessage(null);
+    const confirmDelete = window.confirm('Are you sure you want to delete this mentor profile?');
+    if (!confirmDelete) return;
+
+    if (isMentorsTableMissing) {
+      // LocalStorage local fallback
+      const updatedMentors = mentors.filter((m) => m.id !== id);
+      setMentors(updatedMentors);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ph_mentors', JSON.stringify(updatedMentors));
+      }
+      setActionMessage({ type: 'success', text: 'Mentor profile deleted locally.' });
+      if (editingMentorId === id) resetMentorForm();
+    } else {
+      // Supabase database persistence
+      const res = await deleteMentor(id);
+      if (res.success) {
+        setActionMessage({ type: 'success', text: 'Mentor deleted from Supabase successfully!' });
+        loadMentorsData();
+        if (editingMentorId === id) resetMentorForm();
+      } else {
+        setActionMessage({ type: 'error', text: res.error || 'Failed to delete mentor.' });
+      }
+    }
+  };
+
+  // Populates form fields for editing
+  const startEditMentor = (m: Mentor) => {
+    setEditingMentorId(m.id);
+    setMName(m.name);
+    setMCollege(m.college);
+    setMDept(m.dept);
+    setMContact(m.contact);
+    setActionMessage(null);
+  };
+
+  const resetMentorForm = () => {
+    setEditingMentorId(null);
+    setMName('');
+    setMCollege('');
+    setMDept('');
+    setMContact('');
+  };
+
   if (checkingAuth) {
     return (
       <div className="empty-state text-center font-mono text-sm py-16 text-[#4a6178]">
@@ -179,7 +336,7 @@ export default function AdminPage() {
       </header>
 
       {/* Admin banner in admin portal */}
-      <div className="admin-banner show">ADMIN MODE — reviewing pending calls before they reach the feed</div>
+      <div className="admin-banner show">ADMIN MODE — reviewing pending calls and directory details</div>
 
       <div className="page-view active-view" style={{ minHeight: '80vh', paddingBottom: '60px' }}>
         
@@ -231,7 +388,7 @@ export default function AdminPage() {
         ) : (
           
           /* AUTHENTICATED DASHBOARD */
-          <div style={{ maxWidth: '900px', margin: '40px auto 60px', padding: '0 24px' }}>
+          <div style={{ maxWidth: '950px', margin: '40px auto 60px', padding: '0 24px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1.5px solid var(--blue-deep)', paddingBottom: '14px', gap: '16px', flexWrap: 'wrap' }}>
               <div>
@@ -263,6 +420,13 @@ export default function AdminPage() {
                 onClick={() => setAdminTab('directory')}
               >
                 Active Directory ({allProjects.filter(p => p.status === 'active').length})
+              </button>
+              <button
+                className={`btn btn-sm ${adminTab === 'mentors' ? 'btn-solid' : 'btn-ghost'}`}
+                style={adminTab !== 'mentors' ? { color: 'var(--blue-deep)', borderColor: 'var(--blue-deep)' } : {}}
+                onClick={() => setAdminTab('mentors')}
+              >
+                Manage Mentors ({mentors.length})
               </button>
             </div>
 
@@ -352,6 +516,118 @@ export default function AdminPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* TAB 3: MANAGE MENTORS */}
+                {adminTab === 'mentors' && (
+                  <div>
+                    {isMentorsTableMissing && (
+                      <div className="mb-4 p-3 bg-[#eef2ee] border border-dashed border-[#c68227] text-[#c68227] text-xs font-mono">
+                        💡 Supabase mentors table not found. Storing and managing changes locally via your browser's localStorage fallback.
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px' }} className="grid-cols-1 md:grid-cols-[1fr_1.5fr] !w-full !max-w-none !p-0 !m-0">
+                      
+                      {/* Left: Mentor Form */}
+                      <div className="card" style={{ padding: '20px', background: 'var(--white)', height: 'fit-content', opacity: 1 }}>
+                        <h3 style={{ fontFamily: 'var(--mono)', fontSize: '16px', margin: '0 0 16px', color: 'var(--blue-deep)', borderBottom: '1px dashed var(--paper-line)', paddingBottom: '8px' }}>
+                          {editingMentorId ? 'Edit Mentor Profile' : 'Add New Mentor'}
+                        </h3>
+                        <form onSubmit={handleMentorSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div className="form-field">
+                            <label>Faculty Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={mName}
+                              onChange={(e) => setMName(e.target.value)}
+                              placeholder="e.g. Dr. Nair"
+                            />
+                          </div>
+                          <div className="form-field">
+                            <label>College</label>
+                            <input
+                              type="text"
+                              required
+                              value={mCollege}
+                              onChange={(e) => setMCollege(e.target.value)}
+                              placeholder="e.g. College of Engineering"
+                            />
+                          </div>
+                          <div className="form-field">
+                            <label>Department</label>
+                            <input
+                              type="text"
+                              required
+                              value={mDept}
+                              onChange={(e) => setMDept(e.target.value)}
+                              placeholder="e.g. ECE"
+                            />
+                          </div>
+                          <div className="form-field">
+                            <label>Contact Info</label>
+                            <input
+                              type="text"
+                              required
+                              value={mContact}
+                              onChange={(e) => setMContact(e.target.value)}
+                              placeholder="e.g. nair.ece@college.edu"
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                            <button type="submit" className="btn btn-solid flex-1" style={{ padding: '10px', cursor: 'pointer' }}>
+                              {editingMentorId ? 'Update Mentor' : 'Add Mentor'}
+                            </button>
+                            {editingMentorId && (
+                              <button type="button" onClick={resetMentorForm} className="btn btn-outline" style={{ padding: '10px' }}>
+                                Cancel
+                              </button>
+                            )}
+                          </div>
+                        </form>
+                      </div>
+
+                      {/* Right: Mentors List Table */}
+                      <div className="card" style={{ padding: '20px', background: 'var(--white)', opacity: 1 }}>
+                        <h3 style={{ fontFamily: 'var(--mono)', fontSize: '16px', margin: '0 0 16px', color: 'var(--blue-deep)', borderBottom: '1px dashed var(--paper-line)', paddingBottom: '8px' }}>
+                          Mentor Directory Management
+                        </h3>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1.5px solid var(--blue-deep)', fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
+                                <th style={{ padding: '8px 4px' }}>Name</th>
+                                <th style={{ padding: '8px 4px' }}>Dept</th>
+                                <th style={{ padding: '8px 4px' }}>College</th>
+                                <th style={{ padding: '8px 4px', textAlign: 'right' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {mentors.map((m) => (
+                                <tr key={m.id} style={{ borderBottom: '1px dashed var(--paper-line)' }}>
+                                  <td style={{ padding: '10px 4px', fontWeight: 'bold', color: 'var(--blue-deep)' }}>{m.name}</td>
+                                  <td style={{ padding: '10px 4px' }}>{m.dept}</td>
+                                  <td style={{ padding: '10px 4px' }}>{m.college}</td>
+                                  <td style={{ padding: '10px 4px', textAlign: 'right' }}>
+                                    <div style={{ display: 'inline-flex', gap: '6px' }}>
+                                      <button onClick={() => startEditMentor(m)} className="btn btn-outline btn-sm" style={{ padding: '4px 8px', cursor: 'pointer' }}>
+                                        Edit
+                                      </button>
+                                      <button onClick={() => handleDeleteMentor(m.id)} className="btn btn-outline btn-sm" style={{ borderColor: 'var(--danger)', color: 'var(--danger)', padding: '4px 8px', cursor: 'pointer' }}>
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
                 )}
               </>

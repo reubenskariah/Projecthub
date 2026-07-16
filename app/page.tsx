@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ProjectForm from '@/components/ProjectForm';
-import { fetchActiveProjects, reserveProjectSlot } from '@/app/actions/projectActions';
+import { fetchActiveProjects, reserveProjectSlot, fetchMentors } from '@/app/actions/projectActions';
 import { PRESET_KEYWORDS } from '@/lib/keywords';
 
 interface Applicant {
@@ -30,18 +30,27 @@ interface Project {
   applicants?: Applicant[];
 }
 
-const MENTORS = [
-  { id: 1, name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
-  { id: 2, name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
-  { id: 3, name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
-  { id: 4, name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
-  { id: 5, name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
-  { id: 6, name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
+interface Mentor {
+  id: string;
+  name: string;
+  college: string;
+  dept: string;
+  contact: string;
+}
+
+const DEFAULT_MENTORS: Mentor[] = [
+  { id: "1", name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
+  { id: "2", name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
+  { id: "3", name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
+  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
+  { id: "5", name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
+  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
 ];
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'feed' | 'mentors'>('feed');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [mentors, setMentors] = useState<Mentor[]>(DEFAULT_MENTORS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
@@ -85,9 +94,34 @@ export default function HomePage() {
     setLoading(false);
   };
 
+  const loadMentors = async () => {
+    const res = await fetchMentors();
+    if (res.success && res.data) {
+      setMentors(res.data as Mentor[]);
+    } else if (res.isTableMissing) {
+      if (typeof window !== 'undefined') {
+        const local = localStorage.getItem('ph_mentors');
+        if (local) {
+          setMentors(JSON.parse(local));
+        } else {
+          setMentors(DEFAULT_MENTORS);
+          localStorage.setItem('ph_mentors', JSON.stringify(DEFAULT_MENTORS));
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     loadProjects(selectedKeyword || undefined);
+    loadMentors();
   }, [selectedKeyword]);
+
+  useEffect(() => {
+    if (activeTab === 'mentors') {
+      loadMentors();
+    }
+  }, [activeTab]);
+
 
   // Particle background canvas setup
   useEffect(() => {
@@ -514,7 +548,7 @@ export default function HomePage() {
 
                 <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
                   <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue-deep)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
-                    {MENTORS.length}
+                    {mentors.length}
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
                     <strong style={{ display: 'block', color: 'var(--blue-deep)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Faculty Mentors</strong>
@@ -683,7 +717,7 @@ export default function HomePage() {
               <div className="titleblock-meta">
                 <div className="meta-row">
                   <span>Total Mentors</span>
-                  <span>{MENTORS.length}</span>
+                  <span>{mentors.length}</span>
                 </div>
                 <div className="meta-row">
                   <span>Departments</span>
@@ -698,7 +732,7 @@ export default function HomePage() {
           </section>
 
           <main className="grid">
-            {MENTORS.map((m, idx) => (
+            {mentors.map((m, idx) => (
               <div key={m.id} className="card" style={{ animationDelay: `${idx * 40}ms` }}>
                 <div className="card-head">
                   <div className="card-dept">{m.dept} &middot; {m.college}</div>

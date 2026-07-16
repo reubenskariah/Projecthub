@@ -325,3 +325,114 @@ export async function reserveProjectSlot(
     return { success: false, error: err.message || 'An unexpected error occurred.' };
   }
 }
+
+/**
+ * Fetches mentors from the database. Falls back if table doesn't exist.
+ */
+export async function fetchMentors() {
+  try {
+    const { data, error } = await supabase
+      .from('mentors')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error fetching mentors:', error);
+      if (error.code === 'PGRST116' || error.message.includes('does not exist') || error.message.includes('relation "mentors"')) {
+        return { success: false, isTableMissing: true, data: [] };
+      }
+      return { success: false, error: error.message, data: [] };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (err: any) {
+    console.error('Error in fetchMentors:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+  }
+}
+
+/**
+ * Adds a new mentor to the database.
+ */
+export async function addMentor(mentor: { name: string; college: string; dept: string; contact: string }) {
+  try {
+    const { data, error } = await supabase
+      .from('mentors')
+      .insert({
+        name: mentor.name,
+        college: mentor.college,
+        dept: mentor.dept,
+        contact: mentor.contact
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error adding mentor:', error);
+      if (error.message.includes('does not exist') || error.message.includes('relation "mentors"')) {
+        return { success: false, isTableMissing: true };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Updates an existing mentor in the database.
+ */
+export async function updateMentor(mentor: { id: string; name: string; college: string; dept: string; contact: string }) {
+  try {
+    const { data, error } = await supabase
+      .from('mentors')
+      .update({
+        name: mentor.name,
+        college: mentor.college,
+        dept: mentor.dept,
+        contact: mentor.contact
+      })
+      .eq('id', mentor.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error updating mentor:', error);
+      if (error.message.includes('does not exist') || error.message.includes('relation "mentors"')) {
+        return { success: false, isTableMissing: true };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Deletes a mentor from the database.
+ */
+export async function deleteMentor(mentorId: string) {
+  try {
+    const { error } = await supabase
+      .from('mentors')
+      .delete()
+      .eq('id', mentorId);
+
+    if (error) {
+      console.error('Supabase error deleting mentor:', error);
+      if (error.message.includes('does not exist') || error.message.includes('relation "mentors"')) {
+        return { success: false, isTableMissing: true };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
