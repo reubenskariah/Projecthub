@@ -27,7 +27,7 @@ export interface Applicant {
 }
 
 /**
- * Creates a new project call, calculates the expiration date, and inserts it into the database.
+ * Creates a new project call, calculates the expiration date, and inserts it with status set to 'pending'.
  */
 export async function createProjectCall(formData: FormData, selectedKeywords: string[]) {
   try {
@@ -46,6 +46,7 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + review_days);
 
+    // Default status is 'pending' for review approval
     const { data, error } = await supabase
       .from('projects')
       .insert({
@@ -57,7 +58,7 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
         review_days,
         expires_at: expiresAt.toISOString(),
         keywords: selectedKeywords,
-        status: 'active'
+        status: 'pending'
       })
       .select()
       .single();
@@ -75,15 +76,14 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
 }
 
 /**
- * Fetches active projects from the active_projects view.
- * Optionally filters by keyword and orders by created_at descending.
+ * Fetches active projects from the active_projects view (filtering on active status and ordering by created_at descending).
  */
 export async function fetchActiveProjects(keywordFilter?: string) {
   try {
-    let query = supabase.from('active_projects').select('*');
+    // The view already filters on expires_at >= NOW(). We also ensure status is 'active'.
+    let query = supabase.from('active_projects').select('*').eq('status', 'active');
 
     if (keywordFilter && keywordFilter.trim() !== '') {
-      // Uses the Postgres .contains array operator to return only matching projects
       query = query.contains('keywords', [keywordFilter.trim()]);
     }
 
@@ -94,7 +94,7 @@ export async function fetchActiveProjects(keywordFilter?: string) {
       return { success: false, error: error.message, data: [] };
     }
 
-    // Fetch applicants for each active project to display confirmed/waitlisted members
+    // Load applicants for each project
     const projectsWithApplicants = await Promise.all(
       (data || []).map(async (project: any) => {
         const { data: applicants, error: appError } = await supabase
@@ -118,6 +118,127 @@ export async function fetchActiveProjects(keywordFilter?: string) {
 }
 
 /**
+ * Fetches all pending projects (status = 'pending') for the admin queue.
+ */
+export async function fetchPendingProjects() {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error fetching pending projects:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (err: any) {
+    console.error('Error in fetchPendingProjects:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+  }
+}
+
+/**
+ * Fetches all projects (both active and pending) for the admin directory overview.
+ */
+export async function fetchAllProjects() {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error fetching all projects:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    // Load applicants for each project to show filled status
+    const projectsWithApplicants = await Promise.all(
+      (data || []).map(async (project: any) => {
+        const { data: applicants, error: appError } = await supabase
+          .from('applicants')
+          .select('*')
+          .eq('project_id', project.id);
+
+        return {
+          ...project,
+          applicants: appError ? [] : applicants
+        };
+      })
+    );
+
+    return { success: true, data: projectsWithApplicants };
+  } catch (err: any) {
+    console.error('Error in fetchAllProjects:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+  }
+}
+
+/**
+ * Approves a project call: sets status to 'active' and bumps created_at to NOW() (putting it at top of feed).
+ */
+export async function approveProjectCall(projectId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
+        status: 'active',
+        created_at: new Date().toISOString()
+      })
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error approving project:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Error in approveProjectCall:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.' };
+  }
+}
+
+/**
+ * Deletes a project call: ensures related applicant bookings are deleted first to avoid FK constraint errors.
+ */
+export async function deleteProjectCall(projectId: string) {
+  try {
+    // 1. Delete associated applicant bookings first
+    const { error: appDeleteError } = await supabase
+      .from('applicants')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (appDeleteError) {
+      console.error('Supabase error deleting applicants for project:', appDeleteError);
+      return { success: false, error: appDeleteError.message };
+    }
+
+    // 2. Delete the project record
+    const { error: projectDeleteError } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (projectDeleteError) {
+      console.error('Supabase error deleting project:', projectDeleteError);
+      return { success: false, error: projectDeleteError.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in deleteProjectCall:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.' };
+  }
+}
+
+/**
  * Reserves a slot for an applicant.
  * Validates remaining slots and waitlist buffer (double slots_needed).
  */
@@ -136,7 +257,7 @@ export async function reserveProjectSlot(
       return { success: false, error: 'Please enter a valid LinkedIn URL (e.g. linkedin.com/in/username).' };
     }
 
-    // 1. Fetch the project details to find slots_needed
+    // Fetch project details to find slots_needed
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('slots_needed')
@@ -149,7 +270,7 @@ export async function reserveProjectSlot(
 
     const slotsNeeded = project.slots_needed;
 
-    // 2. Fetch existing applicants for this project to check slot and waitlist counts
+    // Fetch existing applicants to check slots and waitlist counts
     const { data: existingApplicants, error: applicantsError } = await supabase
       .from('applicants')
       .select('status')
@@ -162,7 +283,7 @@ export async function reserveProjectSlot(
     const confirmedCount = (existingApplicants || []).filter(a => a.status === 'confirmed').length;
     const totalCount = (existingApplicants || []).length;
 
-    // Implements an oversubscription waitlist buffer (allows entries up to double the requested team size)
+    // Oversubscription limit
     const maxAllowed = slotsNeeded * 2;
     if (totalCount >= maxAllowed) {
       return {
@@ -171,10 +292,10 @@ export async function reserveProjectSlot(
       };
     }
 
-    // If remaining slot counts are open, status is 'confirmed'. Otherwise, it is 'waitlist'.
+    // Status: confirmed if remaining slots are open, else waitlist.
     const status = confirmedCount < slotsNeeded ? 'confirmed' : 'waitlist';
 
-    // 3. Insert applicant record
+    // Insert applicant record
     const { data: inserted, error: insertError } = await supabase
       .from('applicants')
       .insert({

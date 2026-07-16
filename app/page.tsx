@@ -40,7 +40,7 @@ const MENTORS = [
 ];
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<'feed' | 'mentors' | 'admin'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'mentors'>('feed');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,12 +61,6 @@ export default function HomePage() {
   const [applyLinkedin, setApplyLinkedin] = useState('');
   const [applyMessage, setApplyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [submittingApply, setSubmittingApply] = useState(false);
-
-  // Admin login states
-  const [adminUser, setAdminUser] = useState('');
-  const [adminPass, setAdminPass] = useState('');
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminError, setAdminError] = useState(false);
 
   // Fetch active projects from the server action
   const loadProjects = async (kw?: string) => {
@@ -247,16 +241,17 @@ export default function HomePage() {
     const val = e.target.value;
     setSearchQuery(val);
 
-    if (val.trim() === '') {
-      setShowSuggestions(false);
-      setSelectedKeyword(null);
-    } else {
-      // Filter keywords list
+    // CRITICAL: Suggest only after at least 2 characters are typed
+    if (val.trim().length >= 2) {
       const matches = PRESET_KEYWORDS.filter(kw =>
         kw.toLowerCase().includes(val.toLowerCase())
-      );
+      ).slice(0, 10); // Show max 10 suggestions
       setSuggestions(matches);
       setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setSelectedKeyword(null);
     }
   };
 
@@ -356,17 +351,6 @@ export default function HomePage() {
     }
   };
 
-  // Handle Admin Auth (Mocked simple credentials)
-  const handleAdminLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminUser === 'admin' && adminPass === 'admin123') {
-      setIsAdminLoggedIn(true);
-      setAdminError(false);
-    } else {
-      setAdminError(true);
-    }
-  };
-
   return (
     <>
       {/* Background Canvas */}
@@ -430,12 +414,6 @@ export default function HomePage() {
             >
               Mentors
             </button>
-            <button
-              className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
-              onClick={() => setActiveTab('admin')}
-            >
-              Admin Portal
-            </button>
           </nav>
           <nav className="top-actions">
             <button className="btn btn-amber cursor-pointer" onClick={() => setIsPostModalOpen(true)}>
@@ -451,12 +429,15 @@ export default function HomePage() {
       {activeTab === 'feed' && (
         <div className="page-view active-view">
           <section className="hero" style={{ paddingTop: '24px' }}>
-            <div className="hero-block border-[1.5px] border-[#0f2a47] bg-[#fbfdfb] grid grid-cols-1 md:grid-cols-2 shadow-[6px_6px_0_#0f2a47] rounded-sm overflow-hidden relative">
+            <div className="hero-block" style={{ border: '1.5px solid var(--blue-deep)', background: 'var(--white)', display: 'grid', gridTemplateColumns: '1.3fr 1fr', boxShadow: '6px 6px 0 var(--blue-deep)', borderRadius: 'var(--radius)', overflow: 'hidden', position: 'relative' }}>
               
-              {/* Hero Left Block */}
-              <div className="hero-region-left p-8 flex flex-col justify-between min-h-[290px] gap-[14px]">
-                <div className="flex items-start gap-[18px] text-left mb-3">
-                  <div className="flex-shrink-0 mt-0.5">
+              {/* Region 1: Left Side */}
+              <div className="hero-region-left" style={{ padding: '32px 32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'space-between', minHeight: '290px', gap: '14px' }}>
+                
+                {/* Top content block (Logo Icon and Logo Name + Quote) */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', width: '100%', textAlign: 'left', marginBottom: '12px' }}>
+                  {/* Left: Logo Icon SVG (Enlarged) */}
+                  <div style={{ flexShrink: 0, marginTop: '2px' }}>
                     <svg style={{ width: '84px', height: 'auto', display: 'block' }} viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M45 40 L75 40" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
                       <path d="M45 75 L75 75" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" />
@@ -474,28 +455,38 @@ export default function HomePage() {
                       <circle cx="75" cy="75" r="5" fill="#38BDF8" />
                     </svg>
                   </div>
-                  <div className="flex flex-col flex-1">
-                    <h1 className="font-sans font-extrabold text-[72px] text-[#0f2a47] m-0 leading-[0.85] tracking-[-2.5px]">
-                      project<span className="text-[#2563EB] font-black">hub</span>
+                  
+                  {/* Right: Logo Name and Quote */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
+                    {/* Logo Name (Bigger size, aligned left, close to icon) */}
+                    <h1 style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: '72px', color: '#0f2a47', margin: 0, lineHeight: 0.85, letterSpacing: '-2.5px' }}>
+                      project<span style={{ color: '#2563EB', fontWeight: 900 }}>hub</span>
                     </h1>
-                    <div className="hero-quote font-sans text-sm tracking-[-0.1px] text-[#2563EB] font-bold uppercase pl-10 mt-[11px] leading-[1.1]">
+                    
+                    {/* Quote (Placed below name with a gap, color matching logo blue, uppercase, no quotes, sans font, shifted 0.3cm down and aligned below the 'r') */}
+                    <div className="hero-quote" style={{ fontFamily: 'var(--sans)', fontSize: '14px', letterSpacing: '-0.1px', color: '#2563EB', fontWeight: 700, textTransform: 'uppercase', paddingLeft: '40px', marginTop: '11px', lineHeight: 1.1 }}>
                       you and your idea are not alone!
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-0 text-left pl-2 mb-2">
-                  <div className="font-mono text-[11px] uppercase tracking-[1.5px] text-[#c68227] font-bold mb-1.5">
+                {/* Bottom text block (Aligned to the starting edge of the logo icon) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', textAlign: 'left', paddingLeft: '8px', marginBottom: '8px' }}>
+                  {/* Heading: Our Aim */}
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--amber-dim)', fontWeight: 700, marginBottom: '6px' }}>
                     Our Aim
                   </div>
-                  <div className="font-sans text-[13.5px] text-[#0f2a47] leading-relaxed max-w-[460px] font-medium">
-                    No student should have to build their vision alone. <span className="text-[#2563EB] font-bold">ProjectHub</span> ensures that great ideas always find their team. We bridge the gap between formation and collaboration. Through verified LinkedIn integrations, we simplify how campus teams unite.
+                  
+                  {/* Subtitle sentence (matching logo deep blue color) */}
+                  <div style={{ fontFamily: 'var(--sans)', fontSize: '13.5px', color: '#0f2a47', lineHeight: 1.5, maxWidth: '460px', fontWeight: 500 }}>
+                    No student should have to build their vision alone. <span style={{ color: '#2563EB', fontWeight: 700 }}>ProjectHub</span> ensures that great ideas always find their team. We bridge the gap between imagination and execution by simplifying how teams form on campus. Through quick slot-reservations and professional LinkedIn integration, we help you build your future, together.
                   </div>
                 </div>
 
-                <div className="flex justify-center w-full mt-auto pt-3">
-                  <button onClick={() => setIsHowItWorksOpen(true)} className="btn btn-outline font-mono py-2.5 px-[22px] border-[1.5px] border-[#0f2a47] inline-flex items-center gap-2 font-bold cursor-pointer">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="align-middle">
+                {/* How It Works Guideline Click Box (Box 3 - Centered closer to the bottom) */}
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: 'auto', paddingTop: '14px' }}>
+                  <button onClick={() => setIsHowItWorksOpen(true)} className="btn btn-outline" style={{ fontFamily: 'var(--mono)', padding: '11px 22px', border: '1.5px solid var(--blue-deep)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -505,39 +496,39 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Stats Right Block */}
-              <div className="hero-region-right p-8 flex flex-col justify-center gap-4 border-l-2 border-dotted border-[#0f2a47] bg-[rgba(238,242,238,0.35)]">
-                <div className="font-mono text-[11px] uppercase tracking-[1.5px] text-[#c68227] mb-2 font-bold">
+              {/* Region 2: Right Side with dotted boundary */}
+              <div className="hero-region-right" style={{ padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', borderLeft: '2px dotted var(--blue-deep)', background: 'rgba(238, 242, 238, 0.35)' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--amber-dim)', marginBottom: '8px', fontWeight: 700 }}>
                   CAMPUS MATCH STATISTICS
                 </div>
 
-                <div className="hero-stat-box flex items-center gap-4 bg-[#fbfdfb] border-[1.5px] border-[#0f2a47] p-3 px-4 rounded-sm shadow-[3px_3px_0_rgba(15,42,71,0.15)]">
-                  <div className="text-[28px] font-extrabold text-[#0f2a47] font-mono min-width-[48px]">
+                <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue-deep)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
                     {loading ? '—' : stats.openCount}
                   </div>
-                  <div className="text-xs text-[#4a6178] leading-tight">
-                    <strong className="block text-[#0f2a47] font-mono uppercase text-[11px] mb-0.5">Active Projects</strong>
+                  <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
+                    <strong style={{ display: 'block', color: 'var(--blue-deep)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Active Projects</strong>
                     Open match calls looking for team members
                   </div>
                 </div>
 
-                <div className="hero-stat-box flex items-center gap-4 bg-[#fbfdfb] border-[1.5px] border-[#0f2a47] p-3 px-4 rounded-sm shadow-[3px_3px_0_rgba(15,42,71,0.15)]">
-                  <div className="text-[28px] font-extrabold text-[#0f2a47] font-mono min-width-[48px]">
+                <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue-deep)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
                     {MENTORS.length}
                   </div>
-                  <div className="text-xs text-[#4a6178] leading-tight">
-                    <strong className="block text-[#0f2a47] font-mono uppercase text-[11px] mb-0.5">Faculty Mentors</strong>
+                  <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
+                    <strong style={{ display: 'block', color: 'var(--blue-deep)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Faculty Mentors</strong>
                     Guides ready to assist academic groups
                   </div>
                 </div>
 
-                <div className="hero-stat-box flex items-center gap-4 bg-[#fbfdfb] border-[1.5px] border-[#0f2a47] p-3 px-4 rounded-sm shadow-[3px_3px_0_rgba(15,42,71,0.15)]">
-                  <div className="text-[28px] font-extrabold text-[#c68227] font-mono min-width-[48px]">
+                <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--amber-dim)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
                     {loading ? '—' : stats.newToday}
                   </div>
-                  <div className="text-xs text-[#4a6178] leading-tight">
-                    <strong className="block text-[#c68227] font-mono uppercase text-[11px] mb-0.5">New Today</strong>
-                    Submissions approved/added in last 24h
+                  <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
+                    <strong style={{ display: 'block', color: 'var(--amber-dim)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>New Today</strong>
+                    Submissions approved in last 24h
                   </div>
                 </div>
               </div>
@@ -606,7 +597,7 @@ export default function HomePage() {
               NO MATCHES IN RANGE — try clearing a filter or searching a different keyword.
             </div>
           ) : (
-            <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1180px] mx-auto px-6 py-6 pb-16">
+            <main className="grid">
               {filteredProjects.map((p, idx) => {
                 const applicants = p.applicants || [];
                 const confirmedCount = applicants.filter((a) => a.status === 'confirmed').length;
@@ -618,23 +609,23 @@ export default function HomePage() {
                   <div key={p.id} className="card" style={{ animationDelay: `${idx * 40}ms` }}>
                     <div className="card-head">
                       <div className="card-dept">{p.caller_dept}</div>
-                      <h3 className="card-title text-base font-bold leading-tight text-[#0f2a47]">{p.title}</h3>
+                      <h3 className="card-title">{p.title}</h3>
                     </div>
                     <div className="card-body">
-                      <div className="card-abstract text-xs text-[#4a6178] leading-relaxed line-clamp-3">{p.abstract}</div>
-                      <div className="tag-row flex flex-wrap gap-1.5 mt-2">
+                      <div className="card-abstract">{p.abstract}</div>
+                      <div className="tag-row mt-2">
                         {p.keywords.map((tag) => (
                           <span key={tag} className="tag">{tag}</span>
                         ))}
                       </div>
                       
-                      <div className="slot-row flex justify-between items-center text-xs mt-3">
-                        <span className="font-mono">{remainingSlots === 0 ? 'Project full' : `${remainingSlots} open slot${remainingSlots === 1 ? '' : 's'} remaining`}</span>
-                        <span className="slot-dots flex gap-1">
+                      <div className="slot-row text-xs mt-3">
+                        <span>{remainingSlots === 0 ? 'Project full' : `${remainingSlots} open slot${remainingSlots === 1 ? '' : 's'} remaining`}</span>
+                        <span className="slot-dots">
                           {Array.from({ length: p.slots_needed }).map((_, i) => (
                             <span 
                               key={i} 
-                              className={`dot w-2 h-2 rounded-full border border-[#0f2a47] ${i < confirmedCount ? 'bg-[#0f2a47] filled' : 'bg-transparent'}`} 
+                              className={`dot ${i < confirmedCount ? 'filled' : ''}`} 
                             />
                           ))}
                         </span>
@@ -654,7 +645,7 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div className="card-foot flex justify-between items-center bg-[rgba(238,242,238,0.3)] border-t border-dashed border-[#c9d6d1] p-3 px-4">
+                    <div className="card-foot">
                       <div className="flex flex-col">
                         <span className="text-[11px] font-mono text-[#4a6178]">By: <strong>{p.caller_name}</strong></span>
                       </div>
@@ -672,7 +663,7 @@ export default function HomePage() {
           )}
 
           <footer>
-            PROJECTHUB DIRECTORY — React &middot; Next.js Server Actions &middot; Supabase PostgreSQL View
+            PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel
           </footer>
         </div>
       )}
@@ -681,43 +672,43 @@ export default function HomePage() {
       {activeTab === 'mentors' && (
         <div className="page-view active-view">
           <section className="hero">
-            <div className="titleblock border-[1.5px] border-[#0f2a47] bg-[#fbfdfb]">
-              <div className="titleblock-main p-8 border-r border-[#0f2a47]">
-                <div className="eyebrow font-mono text-xs text-[#c68227] tracking-wider uppercase mb-2">Expert Guidance &middot; Faculty Directory</div>
-                <h1 className="text-3xl font-bold font-mono text-[#0f2a47]">Connect with Project Mentors</h1>
-                <p className="text-sm text-[#4a6178] leading-relaxed mt-4">
+            <div className="titleblock">
+              <div className="titleblock-main">
+                <div className="eyebrow">Expert Guidance &middot; Faculty Directory</div>
+                <h1>Connect with Project Mentors</h1>
+                <p>
                   Browse available faculty mentors across departments. Reach out to guide your project, review research proposals, or co-author technical publications.
                 </p>
               </div>
-              <div className="titleblock-meta p-8 flex flex-col justify-center gap-3">
-                <div className="meta-row flex justify-between border-b border-dashed border-[#c9d6d1] pb-2 font-mono text-xs">
-                  <span className="text-[#4a6178]">Total Mentors</span>
-                  <span className="font-semibold text-[#0f2a47]">{MENTORS.length}</span>
+              <div className="titleblock-meta">
+                <div className="meta-row">
+                  <span>Total Mentors</span>
+                  <span>{MENTORS.length}</span>
                 </div>
-                <div className="meta-row flex justify-between border-b border-dashed border-[#c9d6d1] pb-2 font-mono text-xs">
-                  <span className="text-[#4a6178]">Departments</span>
-                  <span className="font-semibold text-[#0f2a47]">4 (CSE, ECE, IT, Civil)</span>
+                <div className="meta-row">
+                  <span>Departments</span>
+                  <span>4 (CSE, ECE, IT, Civil)</span>
                 </div>
-                <div className="meta-row flex justify-between pb-1 font-mono text-xs">
-                  <span className="text-[#4a6178]">Availability</span>
-                  <span className="font-semibold text-[#0f2a47]">Academic Year 2026</span>
+                <div className="meta-row" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+                  <span>Availability</span>
+                  <span>Academic Year 2026</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1180px] mx-auto px-6 py-6 pb-16">
+          <main className="grid">
             {MENTORS.map((m, idx) => (
               <div key={m.id} className="card" style={{ animationDelay: `${idx * 40}ms` }}>
                 <div className="card-head">
-                  <div className="card-dept text-xs font-mono text-[#c68227] uppercase tracking-wider">{m.dept} &middot; {m.college}</div>
-                  <h3 className="card-title text-base font-bold text-[#0f2a47] mt-1">{m.name}</h3>
+                  <div className="card-dept">{m.dept} &middot; {m.college}</div>
+                  <h3 className="card-title">{m.name}</h3>
                 </div>
-                <div className="card-body p-4 flex flex-col flex-grow justify-between min-h-[140px]">
-                  <p className="text-xs text-[#4a6178] leading-relaxed">
+                <div className="card-body">
+                  <p style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--ink-soft)', margin: '0 0 10px' }}>
                     Available to guide research, review digital logic schematics, or evaluate embedded system hardware boards.
                   </p>
-                  <div className="text-[11px] font-mono border-t border-dashed border-[#c9d6d1] pt-3 mt-4 text-[#0f2a47]">
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', marginTop: 'auto', paddingTop: '10px', borderTop: '1px dashed var(--paper-line)' }}>
                     Email: <strong>{m.contact}</strong>
                   </div>
                 </div>
@@ -726,102 +717,7 @@ export default function HomePage() {
           </main>
 
           <footer>
-            PROJECTHUB DIRECTORY — React &middot; Next.js Server Actions &middot; Supabase PostgreSQL View
-          </footer>
-        </div>
-      )}
-
-      {/* 3. Admin Portal Page */}
-      {activeTab === 'admin' && (
-        <div className="page-view active-view">
-          {!isAdminLoggedIn ? (
-            <div className="max-w-[450px] mx-auto my-16 px-4">
-              <div className="titleblock border-[1.5px] border-[#0f2a47] bg-[#fbfdfb] rounded-sm mb-6">
-                <div className="p-6">
-                  <div className="eyebrow font-mono text-xs text-[#c68227] tracking-wider uppercase mb-1">Organizer Portal</div>
-                  <h2 className="text-xl font-bold font-mono text-[#0f2a47]">Admin Authentication</h2>
-                  <p className="text-xs text-[#4a6178] mt-1">Access reviewer queue and manage faculty mentors.</p>
-                </div>
-              </div>
-
-              <div className="card p-6 bg-[#fbfdfb] border border-[#0f2a47] shadow-[6px_6px_0_#0f2a47]">
-                <form onSubmit={handleAdminLoginSubmit} className="flex flex-col gap-4">
-                  <div className="form-field">
-                    <label className="text-xs font-mono text-[#4a6178] uppercase font-bold">Username</label>
-                    <input
-                      type="text"
-                      required
-                      value={adminUser}
-                      onChange={(e) => setAdminUser(e.target.value)}
-                      placeholder="Enter admin username"
-                      className="p-2.5 border border-[#c9d6d1] text-sm"
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label className="text-xs font-mono text-[#4a6178] uppercase font-bold">Password</label>
-                    <input
-                      type="password"
-                      required
-                      value={adminPass}
-                      onChange={(e) => setAdminPass(e.target.value)}
-                      placeholder="Enter admin password"
-                      className="p-2.5 border border-[#c9d6d1] text-sm"
-                    />
-                  </div>
-
-                  <div className="bg-[#eef2ee] border border-dashed border-[#c9d6d1] p-3 rounded-sm text-xs">
-                    <strong className="color-[#c68227] font-mono block mb-1">Demo Credentials:</strong>
-                    <span className="font-mono text-[#0f2a47]">User: <b>admin</b><br />Pass: <b>admin123</b></span>
-                  </div>
-
-                  {adminError && (
-                    <div className="text-[#c1502e] text-xs font-mono font-bold">
-                      Incorrect username or password.
-                    </div>
-                  )}
-
-                  <button type="submit" className="btn btn-solid btn-block py-2.5 cursor-pointer">
-                    Sign In
-                  </button>
-                </form>
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-[900px] mx-auto my-12 px-6">
-              <div className="flex justify-between items-center mb-6 border-b-[1.5px] border-[#0f2a47] pb-4">
-                <div>
-                  <h1 className="font-mono text-2xl font-bold text-[#0f2a47]">Admin Portal</h1>
-                  <div className="font-mono text-[10px] text-[#c68227] font-bold mt-1">SECURED ACCESS ACTIVE</div>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsAdminLoggedIn(false);
-                    setAdminUser('');
-                    setAdminPass('');
-                  }}
-                  className="btn btn-outline btn-sm font-semibold cursor-pointer"
-                >
-                  Sign Out
-                </button>
-              </div>
-
-              <div className="card p-6 bg-[#fbfdfb] border border-[#0f2a47] shadow-[6px_6px_0_#0f2a47]">
-                <h3 className="font-mono text-base font-bold text-[#0f2a47] border-b border-dashed border-[#c9d6d1] pb-2 mb-4">
-                  Review Queue & Directory Management
-                </h3>
-                <p className="text-sm text-[#4a6178]">
-                  Database views and actions are fully connected. Spams and duplicate calls are reviewed automatically on live feed.
-                </p>
-                <div className="bg-[#eef2ee] border border-dashed border-[#c9d6d1] p-4 mt-6 text-xs text-[#0f2a47]">
-                  <strong className="block font-mono text-[11px] mb-2 uppercase text-[#c68227]">Active System Status:</strong>
-                  All server interactions are logged directly to the connected Supabase instance.
-                </div>
-              </div>
-            </div>
-          )}
-
-          <footer>
-            PROJECTHUB DIRECTORY — React &middot; Next.js Server Actions &middot; Supabase PostgreSQL View
+            PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel
           </footer>
         </div>
       )}
@@ -832,7 +728,7 @@ export default function HomePage() {
           <div className="modal max-w-2xl w-full m-auto">
             <ProjectForm
               onSuccess={() => {
-                // Reload feed when a project is submitted
+                // Reload feed (though it'll be pending, so it won't appear immediately, which is correct)
                 loadProjects(selectedKeyword || undefined);
               }}
               onClose={() => setIsPostModalOpen(false)}
@@ -848,41 +744,41 @@ export default function HomePage() {
             <div className="modal-head">
               <div>
                 <div className="card-dept">Platform Guide</div>
-                <h2 className="text-lg font-bold font-mono">How ProjectHub Works</h2>
+                <h2>How ProjectHub Works</h2>
               </div>
               <button className="modal-close cursor-pointer" onClick={() => setIsHowItWorksOpen(false)}>✕</button>
             </div>
-            <div className="modal-body p-6 flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
+            <div className="modal-body">
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47]">
+                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
                   Step 1
                 </div>
                 <div>
-                  <h3 className="text-sm font-mono font-bold text-[#0f2a47]">1. Post a Project Call</h3>
-                  <p className="text-xs text-[#4a6178] leading-relaxed mt-1">
-                    Enter project details, abstract, lead department and keyword tags. Set review days.
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>1. Post a Project Call</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
+                    Enter project details, abstract, lead department and keyword tags. Set review window (1 to 14 days).
                   </p>
                 </div>
               </div>
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47]">
+                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
                   Step 2
                 </div>
                 <div>
-                  <h3 className="text-sm font-mono font-bold text-[#0f2a47]">2. Active Feed Listings</h3>
-                  <p className="text-xs text-[#4a6178] leading-relaxed mt-1">
-                    Calls are instantly pushed live, letting campus students browse and search matches.
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>2. Active Feed Listings</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
+                    New project calls enter the review queue. Once approved by an organizer, they appear live at the top of the feed.
                   </p>
                 </div>
               </div>
               <div className="flex gap-4 items-start">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47]">
+                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
                   Step 3
                 </div>
                 <div>
-                  <h3 className="text-sm font-mono font-bold text-[#0f2a47]">3. Professional Matchmaking</h3>
-                  <p className="text-xs text-[#4a6178] leading-relaxed mt-1">
-                    Students reserve slot reservations using valid LinkedIn URLs. First-come first-served criteria applies.
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>3. Match and Apply</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
+                    Browse listings, filter by keyword recommendations, and reserve slots with verified LinkedIn URLs.
                   </p>
                 </div>
               </div>
@@ -898,26 +794,24 @@ export default function HomePage() {
             <div className="modal-head">
               <div>
                 <div className="card-dept">{selectedProject.caller_dept}</div>
-                <h2 className="text-lg font-bold font-mono">{selectedProject.title}</h2>
+                <h2>{selectedProject.title}</h2>
               </div>
               <button className="modal-close cursor-pointer" onClick={() => setSelectedProject(null)}>✕</button>
             </div>
             
-            <div className="modal-body p-6 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
+            <div className="modal-body">
               <div>
                 <div className="modal-section-label">Abstract</div>
-                <p className="text-sm text-[#0f2a47] leading-relaxed bg-[#eef2ee]/30 p-3 border border-[#c9d6d1] rounded-sm">
-                  {selectedProject.abstract}
-                </p>
+                <p>{selectedProject.abstract}</p>
               </div>
 
-              <div className="bg-[#eef2ee] border border-[#c9d6d1] p-3 px-4 rounded-sm flex items-center justify-between gap-4 flex-wrap">
+              <div style={{ background: 'var(--paper)', border: '1px solid var(--paper-line)', padding: '12px 16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
-                  <span className="text-[10px] font-mono text-[#4a6178] uppercase tracking-wider block">Project Called By</span>
-                  <strong className="text-sm text-[#0f2a47]">{selectedProject.caller_name}</strong>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '2px' }}>Project Called By</span>
+                  <strong style={{ fontSize: '15px', color: 'var(--blue-deep)' }}>{selectedProject.caller_name}</strong>
                 </div>
                 <div>
-                  <span className="text-xs font-mono text-[#2563EB]">Project Creator</span>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--blue-mid)', fontWeight: 'bold' }}>PROJECT CREATOR</span>
                 </div>
               </div>
 
@@ -930,16 +824,17 @@ export default function HomePage() {
                   const pct = Math.max(4, Math.round((daysLeft / selectedProject.review_days) * 100));
                   
                   return (
-                    <div className="gauge-wrap border border-[#c9d6d1] p-3 bg-white">
-                      <div className="gauge-label text-[10px] flex justify-between text-[#4a6178] font-bold">
+                    <div className="gauge-wrap">
+                      <div className="gauge-label font-bold">
                         <span>{confirmedCount}/{selectedProject.slots_needed} slots filled</span>
                         <span>{daysLeft <= 0 ? 'closes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}</span>
                       </div>
-                      <div className="gauge h-2 bg-[#eef2ee] border border-[#c9d6d1] mt-1 relative overflow-hidden">
+                      <div className="gauge mt-1">
                         <div
-                          className={`gauge-fill h-full ${getGaugeClass(daysLeft, selectedProject.review_days) === 'danger' ? 'bg-[#c1502e]' : getGaugeClass(daysLeft, selectedProject.review_days) === 'warn' ? 'bg-[#e8a33d]' : 'bg-[#3f7d5c]'}`}
+                          className={`gauge-fill ${getGaugeClass(daysLeft, selectedProject.review_days)}`}
                           style={{ width: `${pct}%` }}
                         />
+                        <div className="gauge-ticks" />
                       </div>
                     </div>
                   );
@@ -948,23 +843,23 @@ export default function HomePage() {
 
               <div>
                 <div className="modal-section-label">Current Applicant Pool ({(selectedProject.applicants || []).length})</div>
-                <div className="applicant-list flex flex-col gap-2">
+                <div className="applicant-list">
                   {(selectedProject.applicants || []).length === 0 ? (
-                    <div className="text-xs text-[#4a6178] italic p-2.5 bg-[#eef2ee] border border-[#c9d6d1] text-center">
+                    <div className="helper italic text-center p-3 border border-dashed border-[#c9d6d1] bg-[var(--paper)]">
                       No applicants yet — be the first to apply.
                     </div>
                   ) : (
                     (selectedProject.applicants || []).map((app, index) => (
-                      <div key={index} className={`applicant flex justify-between items-center border border-[#c9d6d1] p-2.5 ${app.status === 'waitlist' ? 'opacity-75 bg-[#eef2ee] border-dashed' : 'bg-[#eef2ee]'}`}>
-                        <div className="text-xs text-[#0f2a47] font-semibold">{app.name} &middot; {app.dept_sem}</div>
-                        <div className="flex items-center gap-3">
-                          <a href={app.linkedin_url.startsWith('http') ? app.linkedin_url : `https://${app.linkedin_url}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[#2563EB] hover:underline">
+                      <div key={index} className={`applicant ${app.status === 'waitlist' ? 'waitlist' : ''}`}>
+                        <span>{app.name} &middot; {app.dept_sem}</span>
+                        <span className="flex items-center gap-2">
+                          <a href={app.linkedin_url.startsWith('http') ? app.linkedin_url : `https://${app.linkedin_url}`} target="_blank" rel="noopener noreferrer">
                             LinkedIn
                           </a>
                           <span className={`status-pill ${app.status === 'confirmed' ? 'main' : 'wait'}`}>
                             {app.status === 'confirmed' ? 'confirmed' : 'waitlist'}
                           </span>
-                        </div>
+                        </span>
                       </div>
                     ))
                   )}
@@ -991,30 +886,30 @@ export default function HomePage() {
                 }
 
                 return (
-                  <div className="border-t border-[#c9d6d1] pt-4">
+                  <div className="border-t border-dashed border-[#c9d6d1] pt-4">
                     <div className="modal-section-label">{isFull ? 'Join the waitlist' : 'Apply for a slot'}</div>
                     
                     {applyMessage && (
-                      <div className={`p-3 mb-3 border text-xs font-semibold rounded-sm ${applyMessage.type === 'success' ? 'bg-[#e4f3ea] border-[#3f7d5c] text-[#3f7d5c]' : 'bg-red-50 border-[#c1502e] text-[#c1502e]'}`}>
+                      <div className={`msg-banner ${applyMessage.type === 'success' ? 'ok show' : 'error show'} mb-3`}>
                         {applyMessage.text}
                       </div>
                     )}
 
-                    <form onSubmit={handleApplySubmit} className="apply-form flex flex-col gap-3">
-                      <div className="form-row flex gap-3">
-                        <div className="form-field flex-1 flex flex-col gap-1">
-                          <label className="text-[10px] font-mono uppercase text-[#4a6178]">Name</label>
-                          <input type="text" required value={applyName} onChange={(e) => setApplyName(e.target.value)} placeholder="e.g. Rahul P." className="p-2 border border-[#c9d6d1] text-xs" />
+                    <form onSubmit={handleApplySubmit} className="apply-form">
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Name</label>
+                          <input type="text" required value={applyName} onChange={(e) => setApplyName(e.target.value)} placeholder="e.g. Rahul P." />
                         </div>
-                        <div className="form-field flex-1 flex flex-col gap-1">
-                          <label className="text-[10px] font-mono uppercase text-[#4a6178]">Semester</label>
-                          <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="e.g. Sem 5" className="p-2 border border-[#c9d6d1] text-xs" />
+                        <div className="form-field">
+                          <label>Semester</label>
+                          <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="e.g. Sem 5" />
                         </div>
                       </div>
-                      <div className="form-row flex gap-3">
-                        <div className="form-field flex-1 flex flex-col gap-1">
-                          <label className="text-[10px] font-mono uppercase text-[#4a6178]">Department</label>
-                          <select value={applyDept} onChange={(e) => setApplyDept(e.target.value)} className="p-2 border border-[#c9d6d1] text-xs">
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Department</label>
+                          <select value={applyDept} onChange={(e) => setApplyDept(e.target.value)}>
                             <option value="CSE">CSE</option>
                             <option value="ECE">ECE</option>
                             <option value="EEE">EEE</option>
@@ -1023,18 +918,18 @@ export default function HomePage() {
                             <option value="IT">IT</option>
                           </select>
                         </div>
-                        <div className="form-field flex-1 flex flex-col gap-1">
-                          <label className="text-[10px] font-mono uppercase text-[#4a6178]">LinkedIn URL</label>
-                          <input type="text" required value={applyLinkedin} onChange={(e) => setApplyLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/rahul-p" className="p-2 border border-[#c9d6d1] text-xs" />
+                        <div className="form-field">
+                          <label>LinkedIn URL</label>
+                          <input type="text" required value={applyLinkedin} onChange={(e) => setApplyLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/rahul-p" />
                         </div>
                       </div>
-                      <div className="helper text-[11px] text-[#4a6178] italic">
+                      <div className="helper italic">
                         Once submitted, your slot status is confirmed instantly based on the current pool size.
                       </div>
                       <button
                         type="submit"
                         disabled={submittingApply}
-                        className={`btn btn-block py-2.5 cursor-pointer font-bold ${isFull ? 'btn-outline border-[#0f2a47] text-[#0f2a47]' : 'btn-solid bg-[#0f2a47] text-white'}`}
+                        className={`btn btn-block ${isFull ? 'btn-outline border-[#0f2a47] text-[#0f2a47]' : 'btn-solid bg-[#0f2a47] text-white'}`}
                       >
                         {submittingApply ? 'Processing...' : isFull ? 'Join Waitlist' : 'Reserve My Slot'}
                       </button>
