@@ -58,7 +58,8 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
     setIsSubmitting(true);
     setMessage(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
     try {
       const res = await createProjectCall(formData, selectedKeywords);
@@ -68,7 +69,7 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
           type: 'success',
           text: 'Submitted. Your call is now queued for organizer approval.'
         });
-        e.currentTarget.reset();
+        form.reset();
         setSelectedKeywords([]);
         setKeywordSearch('');
         if (onSuccess) {
