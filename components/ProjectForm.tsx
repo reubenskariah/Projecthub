@@ -133,7 +133,7 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
               />
             </div>
             <div className="form-field">
-              <label>Your Email <span className="text-[10px] text-[#e8a33d] font-mono font-semibold">(Private - Hidden from feed)</span></label>
+              <label>Your Email</label>
               <input
                 type="email"
                 name="caller_email"
