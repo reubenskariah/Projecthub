@@ -76,12 +76,15 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
 }
 
 /**
- * Fetches active projects from the active_projects view (filtering on active status and ordering by created_at descending).
+ * Fetches active projects from the database, nested-selecting applicants in a single query.
  */
 export async function fetchActiveProjects(keywordFilter?: string) {
   try {
-    // The view already filters on expires_at >= NOW(). We also ensure status is 'active'.
-    let query = supabase.from('active_projects').select('*').eq('status', 'active');
+    let query = supabase
+      .from('projects')
+      .select('*, applicants(*)')
+      .eq('status', 'active')
+      .gte('expires_at', new Date().toISOString());
 
     if (keywordFilter && keywordFilter.trim() !== '') {
       query = query.contains('keywords', [keywordFilter.trim()]);
@@ -94,23 +97,23 @@ export async function fetchActiveProjects(keywordFilter?: string) {
       return { success: false, error: error.message, data: [] };
     }
 
-    // Load applicants for each project
-    const projectsWithApplicants = await Promise.all(
-      (data || []).map(async (project: any) => {
-        const { data: applicants, error: appError } = await supabase
-          .from('applicants')
-          .select('*')
-          .eq('project_id', project.id)
-          .order('created_at', { ascending: true });
-
+    // Sort applicants for each project and filter out filled ones
+    const activeProjects = (data || [])
+      .map((project: any) => {
+        const sortedApplicants = (project.applicants || []).sort(
+          (a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+        );
         return {
           ...project,
-          applicants: appError ? [] : applicants
+          applicants: sortedApplicants
         };
       })
-    );
+      .filter((project: any) => {
+        const confirmedCount = project.applicants.filter((a: any) => a.status === 'confirmed').length;
+        return confirmedCount < project.slots_needed;
+      });
 
-    return { success: true, data: projectsWithApplicants };
+    return { success: true, data: activeProjects };
   } catch (err: any) {
     console.error('Error in fetchActiveProjects server action:', err);
     return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
@@ -141,13 +144,13 @@ export async function fetchPendingProjects() {
 }
 
 /**
- * Fetches all projects (both active and pending) for the admin directory overview.
+ * Fetches all projects (both active and pending) for the admin directory, nested-selecting applicants in a single query.
  */
 export async function fetchAllProjects() {
   try {
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
+      .select('*, applicants(*)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -155,20 +158,16 @@ export async function fetchAllProjects() {
       return { success: false, error: error.message, data: [] };
     }
 
-    // Load applicants for each project to show filled status
-    const projectsWithApplicants = await Promise.all(
-      (data || []).map(async (project: any) => {
-        const { data: applicants, error: appError } = await supabase
-          .from('applicants')
-          .select('*')
-          .eq('project_id', project.id);
-
-        return {
-          ...project,
-          applicants: appError ? [] : applicants
-        };
-      })
-    );
+    // Sort applicants for each project
+    const projectsWithApplicants = (data || []).map((project: any) => {
+      const sortedApplicants = (project.applicants || []).sort(
+        (a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+      );
+      return {
+        ...project,
+        applicants: sortedApplicants
+      };
+    });
 
     return { success: true, data: projectsWithApplicants };
   } catch (err: any) {
