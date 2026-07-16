@@ -42,9 +42,9 @@ const DEFAULT_MENTORS: Mentor[] = [
   { id: "1", name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
   { id: "2", name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
   { id: "3", name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
-  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
+  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "ECS", contact: "thomas.it@inst.edu" },
   { id: "5", name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
-  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
+  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "CE", contact: "pillai.civil@college.edu" }
 ];
 
 export default function HomePage() {
@@ -944,12 +944,15 @@ export default function HomePage() {
                         <div className="form-field">
                           <label>Department</label>
                           <select value={applyDept} onChange={(e) => setApplyDept(e.target.value)}>
-                            <option value="CSE">CSE</option>
                             <option value="ECE">ECE</option>
-                            <option value="EEE">EEE</option>
-                            <option value="Mechanical">Mechanical</option>
-                            <option value="Civil">Civil</option>
-                            <option value="IT">IT</option>
+                            <option value="CSE">CSE</option>
+                            <option value="CE">CE</option>
+                            <option value="ME">ME</option>
+                            <option value="CHE">CHE</option>
+                            <option value="FT">FT</option>
+                            <option value="EV">EV</option>
+                            <option value="ECS">ECS</option>
+                            <option value="RB">RB</option>
                           </select>
                         </div>
                         <div className="form-field">

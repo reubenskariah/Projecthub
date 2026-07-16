@@ -134,12 +134,15 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
             <div className="form-field">
               <label>Lead department</label>
               <select name="caller_dept" required>
-                <option value="CSE">CSE</option>
                 <option value="ECE">ECE</option>
-                <option value="EEE">EEE</option>
-                <option value="Mechanical">Mechanical</option>
-                <option value="Civil">Civil</option>
-                <option value="IT">IT</option>
+                <option value="CSE">CSE</option>
+                <option value="CE">CE</option>
+                <option value="ME">ME</option>
+                <option value="CHE">CHE</option>
+                <option value="FT">FT</option>
+                <option value="EV">EV</option>
+                <option value="ECS">ECS</option>
+                <option value="RB">RB</option>
               </select>
             </div>
           </div>

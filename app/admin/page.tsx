@@ -50,9 +50,9 @@ const DEFAULT_MENTORS: Mentor[] = [
   { id: "1", name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
   { id: "2", name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
   { id: "3", name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
-  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
+  { id: "4", name: "Dr. Thomas", college: "Institute of Technology", dept: "ECS", contact: "thomas.it@inst.edu" },
   { id: "5", name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
-  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
+  { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "CE", contact: "pillai.civil@college.edu" }
 ];
 
 export default function AdminPage() {
