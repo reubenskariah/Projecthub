@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProjectHub — Find your team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --blue-deep: #0f2a47;
+      --blue-mid: #173a5e;
+      --cyan-line: #6fc6d9;
+      --paper: #eef2ee;
+      --paper-line: #c9d6d1;
+      --amber: #e8a33d;
+      --amber-dim: #c68227;
+      --ink: #0f2a47;
+      --ink-soft: #4a6178;
+      --white: #fbfdfb;
+      --danger: #c1502e;
+      --ok: #3f7d5c;
+      --radius: 2px;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/32px 32px,
+        linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0/32px 32px,
+        var(--paper);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button {
+      font-family: var(--sans);
+      cursor: pointer;
+    }
+
+    /* ---------- Header ---------- */
+    header.topbar {
+      background: var(--blue-deep);
+      color: var(--white);
+      border-bottom: 4px solid var(--amber);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .topbar-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border: 2px solid var(--cyan-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--cyan-line);
+      position: relative;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: '';
+      position: absolute;
+      background: var(--cyan-line);
+    }
+
+    .brand-mark::before {
+      width: 6px;
+      height: 2px;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .brand-mark::after {
+      width: 6px;
+      height: 2px;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .brand-name {
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-size: 18px;
+    }
+
+    .brand-tag {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--cyan-line);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    nav.nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.65);
+      font-family: var(--mono);
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 0;
+      cursor: pointer;
+      position: relative;
+      transition: color .2s ease;
+    }
+
+    .nav-tab::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: var(--amber);
+      transition: width .25s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--cyan-line);
+    }
+
+    .nav-tab.active {
+      color: var(--white);
+    }
+
+    .nav-tab.active::after {
+      width: 100%;
+    }
+
+    nav.top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1.5px solid transparent;
+      padding: 9px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform .15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background .15s ease, box-shadow .15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2.5px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-amber {
+      background: var(--amber);
+      color: var(--blue-deep);
+    }
+
+    .btn-amber:hover {
+      background: #f0b358;
+      box-shadow: 0 0 12px rgba(232, 163, 61, 0.3);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--white);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--cyan-line);
+      color: var(--cyan-line);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--blue-deep);
+      color: var(--blue-deep);
+    }
+
+    .btn-outline:hover {
+      background: var(--blue-deep);
+      color: var(--white);
+    }
+
+    .btn-solid {
+      background: var(--blue-deep);
+      color: var(--white);
+    }
+
+    .btn-solid:hover {
+      background: var(--blue-mid);
+      box-shadow: 0 0 10px rgba(15, 42, 71, 0.25);
+    }
+
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ---------- Page Views & Animations ---------- */
+    .page-view {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .page-view.active-view {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ---------- Hero / title block ---------- */
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 24px 8px;
+    }
+
+    .titleblock {
+      border: 1.5px solid var(--blue-deep);
+      background: var(--white);
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+    }
+
+    .titleblock-main {
+      padding: 28px 30px;
+      border-right: 1.5px solid var(--blue-deep);
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber-dim);
+      margin-bottom: 10px;
+    }
+
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.25;
+      margin: 0 0 14px;
+      font-weight: 700;
+    }
+
+    .hero p {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      max-width: 52ch;
+      margin: 0;
+    }
+
+    .titleblock-meta {
+      padding: 28px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 12px;
+      border-bottom: 1px dashed var(--paper-line);
+      padding-bottom: 10px;
+    }
+
+    .meta-row span:first-child {
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .meta-row span:last-child {
+      font-weight: 600;
+    }
+
+    /* ---------- Search / filters ---------- */
+    .toolbar {
+      max-width: 1180px;
+      margin: 26px auto 0;
+      padding: 0 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+    }
+
+    .search-row input[type=text] {
+      flex: 1;
+      border: 1.5px solid var(--blue-deep);
+      background: var(--white);
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 14px;
+      border-radius: var(--radius);
+    }
+
+    .search-row input[type=text]:focus {
+      outline: 2px solid var(--amber);
+      outline-offset: 1px;
+    }
+
+    .results-count {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin: 14px 2px 0;
+    }
+
+    /* ---------- Autocomplete Dropdown ---------- */
+    .suggestions-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--blue-deep);
+      border-radius: var(--radius);
+      z-index: 50;
+      max-height: 260px;
+      overflow-y: auto;
+      box-shadow: 5px 5px 0 var(--blue-deep);
+      display: none;
+      animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .suggestions-dropdown.show {
+      display: block;
+    }
+
+    .suggestion-item {
+      padding: 11px 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px dashed var(--paper-line);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+      background: var(--blue-deep);
+      color: var(--white);
+    }
+
+    /* ---------- Keyword picker inside form ---------- */
+    .kw-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--paper-line);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      z-index: 60;
+      max-height: 160px;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 4px 12px rgba(15, 42, 71, 0.15);
+    }
+
+    .kw-dropdown.show {
+      display: block;
+    }
+
+    .kw-dropdown-item {
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.1s ease;
+    }
+
+    .kw-dropdown-item:hover {
+      background: var(--paper);
+    }
+
+    .selected-kws-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .selected-kw-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--blue-deep);
+      color: var(--white);
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .selected-kw-tag button {
+      background: transparent;
+      border: none;
+      color: var(--white);
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .selected-kw-tag button:hover {
+      color: var(--amber);
+    }
+
+    /* ---------- Grid ---------- */
+    .grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--blue-deep);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow .2s cubic-bezier(0.16, 1, 0.3, 1), transform .2s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0;
+      animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .card:hover {
+      box-shadow: 6px 6px 0 var(--blue-deep);
+      transform: translate(-3px, -3px);
+    }
+
+    .card-head {
+      padding: 16px 16px 10px;
+      border-bottom: 1px dashed var(--paper-line);
+    }
+
+    .card-dept {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--amber-dim);
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 12px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-abstract {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      background: var(--paper);
+      border: 1px solid var(--paper-line);
+      padding: 3px 8px;
+      border-radius: 2px;
+      color: var(--ink-soft);
+    }
+
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .gauge-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .gauge {
+      height: 8px;
+      background: var(--paper);
+      border: 1px solid var(--paper-line);
+      position: relative;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      background: var(--ok);
+    }
+
+    .gauge-fill.warn {
+      background: var(--amber);
+    }
+
+    .gauge-fill.danger {
+      background: var(--danger);
+    }
+
+    .gauge-ticks {
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(90deg, transparent, transparent 9%, rgba(15, 42, 71, 0.15) 9%, rgba(15, 42, 71, 0.15) calc(9% + 1px));
+    }
+
+    .slot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 11.5px;
+    }
+
+    .slot-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 1.5px solid var(--blue-deep);
+    }
+
+    .dot.filled {
+      background: var(--blue-deep);
+    }
+
+    .card-foot {
+      padding: 12px 16px;
+      border-top: 1px dashed var(--paper-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .expired-flag {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 60px 24px;
+      text-align: center;
+      font-family: var(--mono);
+      color: var(--ink-soft);
+    }
+
+    /* ---------- Modal ---------- */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 42, 71, 0.65);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+      overflow-y: auto;
+      z-index: 100;
+      backdrop-filter: blur(3px);
+    }
+
+    .overlay.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal {
+      background: var(--white);
+      border: 1.5px solid var(--blue-deep);
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 8px 8px 0 rgba(15, 42, 71, 0.2);
+      animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-head {
+      background: var(--blue-deep);
+      color: var(--white);
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .modal-head h2 {
+      font-family: var(--mono);
+      font-size: 19px;
+      margin: 0 0 6px;
+      line-height: 1.3;
+    }
+
+    .modal-head .card-dept {
+      color: var(--cyan-line);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: var(--white);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
+      flex: none;
+    }
+
+    .modal-close:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .modal-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .modal-section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--amber-dim);
+      margin-bottom: 8px;
+    }
+
+    .modal-body p {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    form.apply-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-field label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--ink-soft);
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      border: 1.5px solid var(--paper-line);
+      padding: 10px 11px;
+      font-family: var(--sans);
+      font-size: 13.5px;
+      border-radius: var(--radius);
+      background: var(--white);
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      outline: none;
+      border-color: var(--amber-dim);
+    }
+
+    .helper {
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+
+    .applicant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .applicant {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--paper-line);
+      padding: 9px 12px;
+      font-size: 13px;
+      background: var(--paper);
+    }
+
+    .applicant.waitlist {
+      opacity: 0.75;
+      border-style: dashed;
+    }
+
+    .applicant a {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--blue-mid);
+      text-decoration: underline;
+    }
+
+    .status-pill {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pill.main {
+      background: var(--ok);
+      color: white;
+    }
+
+    .status-pill.wait {
+      background: var(--paper-line);
+      color: var(--ink-soft);
+    }
+
+    .msg-banner {
+      padding: 12px 14px;
+      font-size: 13px;
+      border-radius: 2px;
+      display: none;
+    }
+
+    .msg-banner.show {
+      display: block;
+    }
+
+    .msg-banner.ok {
+      background: #e4f3ea;
+      color: var(--ok);
+      border: 1px solid var(--ok);
+    }
+
+    /* ---------- Admin Portal specific styling ---------- */
+    .admin-banner {
+      background: var(--amber);
+      color: var(--blue-deep);
+      text-align: center;
+      padding: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: none;
+    }
+
+    .admin-banner.show {
+      display: block;
+    }
+
+    .queue-card {
+      background: var(--white);
+      border: 1px solid var(--blue-deep);
+      border-left: 5px solid var(--amber);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 16px;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .queue-card div.qtext {
+      font-size: 13.5px;
+    }
+
+    .queue-card b {
+      font-family: var(--mono);
+    }
+
+    .queue-actions {
+      display: flex;
+      gap: 8px;
+      flex: none;
+    }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+
+    footer {
+      border-top: 1.5px solid var(--blue-deep);
+      padding: 20px 24px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-soft);
+      background: rgba(238, 242, 238, 0.7);
+      backdrop-filter: blur(6px);
+      position: relative;
+      z-index: 10;
+    }
+
+    @media (max-width:720px) {
+      .hero-block {
+        grid-template-columns: 1fr !important;
+      }
+
+      .hero-region-right {
+        border-left: none !important;
+        border-top: 2px dotted var(--blue-deep) !important;
+      }
+
+      .titleblock {
+        grid-template-columns: 1fr;
+      }
+
+      .titleblock-main {
+        border-right: none;
+        border-bottom: 1.5px solid var(--blue-deep);
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+
+      .nav-links {
+        justify-content: center;
+      }
+
+      .top-actions {
+        justify-content: center;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Animated Particle Background Canvas -->
+  <canvas id="bgCanvas"
+    style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; pointer-events:none;"></canvas>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" onclick="switchPage('feed')" style="cursor: pointer;">
+        <svg style="height: 38px; width: auto; display: block;" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g>
+            <path d="M45 40 L75 40" stroke="#2563EB" stroke-width="4" stroke-linecap="round" />
+            <path d="M45 75 L75 75" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
+            <path d="M45 40 L45 75" stroke="#eef2ee" stroke-width="6" stroke-linecap="round" />
+            <path 
+              d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" 
+              stroke="#2563EB" 
+              stroke-width="6" 
+              stroke-linecap="round" 
+              fill="none" 
+            />
+            <circle cx="45" cy="40" r="8" fill="#eef2ee" />
+            <circle cx="75" cy="40" r="8" fill="#2563EB" />
+            <circle cx="45" cy="75" r="8" fill="#94A3B8" />
+            <circle cx="75" cy="75" r="5" fill="#38BDF8" />
+          </g>
+          <text 
+            x="110" 
+            y="72" 
+            fill="#eef2ee" 
+            font-family="var(--sans)" 
+            font-weight="800" 
+            font-size="64" 
+            letter-spacing="-1"
+          >
+            project<tspan fill="#2563EB" font-weight="900">hub</tspan>
+          </text>
+        </svg>
+      </div>
+      <nav class="nav-links">
+        <button class="nav-tab active" data-page="feed">Projects</button>
+        <button class="nav-tab" data-page="mentors">Mentors</button>
+        <button class="nav-tab" data-page="admin">Admin Portal</button>
+      </nav>
+      <nav class="top-actions">
+        <button class="btn btn-amber" id="postBtn">+ Call for a project</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="admin-banner" id="adminBanner">ADMIN MODE — reviewing pending calls before they reach the feed</div>
+
+  <!-- PROJECTS VIEW -->
+  <div id="feedView" class="page-view active-view">
+    <section class="hero" style="padding-top: 24px;">
+      <div class="hero-block"
+        style="border: 1.5px solid var(--blue-deep); background: var(--white); display: grid; grid-template-columns: 1.3fr 1fr; box-shadow: 6px 6px 0 var(--blue-deep); border-radius: var(--radius); overflow: hidden; position: relative;">
+
+        <!-- Region 1: Left Side -->
+        <div class="hero-region-left"
+          style="padding: 32px 32px 24px; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; min-height: 290px; gap: 14px;">
+          
+          <!-- Top content block (Logo Icon and Logo Name + Quote) -->
+          <div style="display: flex; align-items: flex-start; gap: 18px; width: 100%; text-align: left; margin-bottom: 12px;">
+            <!-- Left: Logo Icon SVG (Enlarged) -->
+            <div style="flex-shrink: 0; margin-top: 2px;">
+              <svg style="width: 84px; height: auto; display: block;" viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M45 40 L75 40" stroke="#2563EB" stroke-width="4" stroke-linecap="round" />
+                <path d="M45 75 L75 75" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
+                <path d="M45 40 L45 75" stroke="#1E293B" stroke-width="6" stroke-linecap="round" />
+                <path 
+                  d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" 
+                  stroke="#2563EB" 
+                  stroke-width="6" 
+                  stroke-linecap="round" 
+                  fill="none" 
+                />
+                <circle cx="45" cy="40" r="8" fill="#1E293B" />
+                <circle cx="75" cy="40" r="8" fill="#2563EB" />
+                <circle cx="45" cy="75" r="8" fill="#94A3B8" />
+                <circle cx="75" cy="75" r="5" fill="#38BDF8" />
+              </svg>
+            </div>
+            
+            <!-- Right: Logo Name and Quote -->
+            <div style="display: flex; flex-direction: column; gap: 0; flex: 1;">
+              <!-- Logo Name (Bigger size, aligned left, close to icon) -->
+              <h1 style="font-family: var(--sans); font-weight: 800; font-size: 72px; color: #0f2a47; margin: 0; line-height: 0.85; letter-spacing: -2.5px;">project<span style="color: #2563EB; font-weight: 900;">hub</span></h1>
+              
+              <!-- Quote (Placed below name with a gap, color matching logo blue, uppercase, no quotes, sans font, shifted 0.3cm down and aligned below the 'r') -->
+              <div class="hero-quote" style="font-family: var(--sans); font-size: 14px; letter-spacing: -0.1px; color: #2563EB; font-weight: 700; text-transform: uppercase; padding-left: 40px; margin-top: 11px; line-height: 1.1;">
+                you and your idea are not alone!
+              </div>
+            </div>
+          </div>
+          
+          <!-- Bottom text block (Aligned to the starting edge of the logo icon) -->
+          <div style="display: flex; flex-direction: column; gap: 0; width: 100%; text-align: left; padding-left: 8px; margin-bottom: 8px;">
+            <!-- Heading: Our Aim -->
+            <div style="font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber-dim); font-weight: 700; margin-bottom: 6px;">
+              Our Aim
+            </div>
+            
+            <!-- Subtitle sentence (matching logo deep blue color) -->
+            <div style="font-family: var(--sans); font-size: 13.5px; color: #0f2a47; line-height: 1.5; max-width: 460px; font-weight: 500;">
+              No student should have to build their vision alone. <span style="color: #2563EB; font-weight: 700;">ProjectHub</span> ensures that great ideas always find their team. We bridge the gap between imagination and execution by simplifying how teams form on campus. Through quick slot-reservations and professional LinkedIn integration, we help you build your future, together.
+            </div>
+          </div>
+
+          <!-- How It Works Guideline Click Box (Box 3 - Centered closer to the bottom) -->
+          <div style="display: flex; justify-content: center; width: 100%; margin-top: auto; padding-top: 14px;">
+            <button id="howItWorksBtn" class="btn btn-outline"
+              style="font-family: var(--mono); padding: 11px 22px; border: 1.5px solid var(--blue-deep); display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              How it works
+            </button>
+          </div>
+        </div>
+
+        <!-- Region 2: Right Side with dotted boundary -->
+        <div class="hero-region-right"
+          style="padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 16px; border-left: 2px dotted var(--blue-deep); background: rgba(238, 242, 238, 0.35);">
+
+          <div
+            style="font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber-dim); margin-bottom: 8px; font-weight: 700;">
+            CAMPUS MATCH STATISTICS</div>
+
+          <!-- Stat Row 1 -->
+          <div class="hero-stat-box"
+            style="display: flex; align-items: center; gap: 16px; background: var(--white); border: 1.5px solid var(--blue-deep); padding: 12px 16px; border-radius: var(--radius); box-shadow: 3px 3px 0 rgba(15,42,71,0.15);">
+            <div
+              style="font-size: 28px; font-weight: 800; color: var(--blue-deep); font-family: var(--mono); min-width: 48px;"
+              id="statOpenHero">—</div>
+            <div style="font-size: 13px; color: var(--ink-soft); line-height: 1.35;">
+              <strong
+                style="display: block; color: var(--blue-deep); font-family: var(--mono); text-transform: uppercase; font-size: 11px;">Active
+                Projects</strong>
+              Open match calls looking for team members
+            </div>
+          </div>
+
+          <!-- Stat Row 2 -->
+          <div class="hero-stat-box"
+            style="display: flex; align-items: center; gap: 16px; background: var(--white); border: 1.5px solid var(--blue-deep); padding: 12px 16px; border-radius: var(--radius); box-shadow: 3px 3px 0 rgba(15,42,71,0.15);">
+            <div
+              style="font-size: 28px; font-weight: 800; color: var(--blue-deep); font-family: var(--mono); min-width: 48px;"
+              id="statMentorsHero">—</div>
+            <div style="font-size: 13px; color: var(--ink-soft); line-height: 1.35;">
+              <strong
+                style="display: block; color: var(--blue-deep); font-family: var(--mono); text-transform: uppercase; font-size: 11px;">Faculty
+                Mentors</strong>
+              Guides ready to assist academic groups
+            </div>
+          </div>
+
+          <!-- Stat Row 3 -->
+          <div class="hero-stat-box"
+            style="display: flex; align-items: center; gap: 16px; background: var(--white); border: 1.5px solid var(--blue-deep); padding: 12px 16px; border-radius: var(--radius); box-shadow: 3px 3px 0 rgba(15,42,71,0.15);">
+            <div
+              style="font-size: 28px; font-weight: 800; color: var(--amber-dim); font-family: var(--mono); min-width: 48px;"
+              id="statNewTodayHero">—</div>
+            <div style="font-size: 13px; color: var(--ink-soft); line-height: 1.35;">
+              <strong
+                style="display: block; color: var(--amber-dim); font-family: var(--mono); text-transform: uppercase; font-size: 11px;">New
+                Today</strong>
+              Project submissions approved in last 24h
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="search-row">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Type keyword here... e.g. Machine Learning, VLSI, Civil"
+            autocomplete="off">
+          <div class="suggestions-dropdown" id="searchSuggestions"></div>
+        </div>
+      </div>
+      <div class="results-count" id="resultsCount"></div>
+    </div>
+
+    <main class="grid" id="grid"></main>
+    <div class="empty-state" id="emptyState" style="display:none;">NO MATCHES IN RANGE — try clearing a filter or a
+      different keyword.</div>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
+  </div>
+
+  <!-- MENTORS VIEW -->
+  <div id="mentorsView" class="page-view">
+    <section class="hero">
+      <div class="titleblock">
+        <div class="titleblock-main">
+          <div class="eyebrow">Expert Guidance &middot; Faculty Directory</div>
+          <h1>Connect with Project Mentors</h1>
+          <p>Browse available faculty mentors across departments. Reach out to guide your project, review research
+            proposals, or co-author technical publications.</p>
+        </div>
+        <div class="titleblock-meta">
+          <div class="meta-row"><span>Total Mentors</span><span id="statMentors">—</span></div>
+          <div class="meta-row"><span>Departments</span><span id="statMentorDepts">—</span></div>
+          <div class="meta-row" style="border-bottom:none;padding-bottom:0;"><span>Availability</span><span>Academic
+              Year 2026</span></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="grid" id="mentorsGrid"></main>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div id="adminView" class="page-view">
+    <!-- Login screen -->
+    <div id="adminLoginArea" style="max-width: 450px; margin: 60px auto; padding: 0 16px;">
+      <div class="titleblock"
+        style="display: block; margin-bottom: 24px; border: 1.5px solid var(--blue-deep); background: var(--white); border-radius: var(--radius);">
+        <div class="titleblock-main" style="border-right: none; padding: 24px;">
+          <div class="eyebrow">Organizer Portal</div>
+          <h2 style="font-family: var(--mono); margin: 0 0 8px; font-size: 22px;">Admin Authentication</h2>
+          <p style="font-size: 13.5px; margin: 0;">Access reviewer queue and manage faculty mentors.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 24px; background: var(--white); opacity: 1;">
+        <form id="adminLoginForm" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-field">
+            <label>Username</label>
+            <input type="text" id="adminUser" required placeholder="Enter admin username" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label>Password</label>
+            <input type="password" id="adminPass" required placeholder="Enter admin password">
+          </div>
+
+          <div
+            style="background: var(--paper); border: 1px dashed var(--paper-line); padding: 12px; border-radius: var(--radius); font-size: 12.5px;">
+            <strong style="color: var(--amber-dim); font-family: var(--mono); display: block; margin-bottom: 4px;">Demo
+              Credentials:</strong>
+            <span style="font-family: var(--mono); color: var(--ink);">User: <b>admin</b><br>Pass:
+              <b>admin123</b></span>
+          </div>
+
+          <div id="loginError"
+            style="color: var(--danger); font-size: 12.5px; font-family: var(--mono); display: none;">Incorrect username
+            or password.</div>
+
+          <button type="submit" class="btn btn-solid btn-block" style="padding: 12px;">Sign In</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Authenticated Dashboard -->
+    <div id="adminDashboard" style="max-width: 900px; margin: 40px auto 60px; padding: 0 24px; display: none;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1.5px solid var(--blue-deep); padding-bottom: 14px; gap: 16px; flex-wrap: wrap;">
+        <div>
+          <h1 style="font-family: var(--mono); font-size: 28px; margin: 0;">Admin Portal</h1>
+          <div
+            style="font-family: var(--mono); font-size: 11px; color: var(--amber-dim); font-weight: bold; margin-top: 4px;">
+            SECURED ACCESS ACTIVE</div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="adminLogoutBtn">Sign Out</button>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div
+        style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--paper-line); padding-bottom: 8px;">
+        <button class="btn btn-sm btn-solid" id="adminTabQueueBtn">Review Queue</button>
+        <button class="btn btn-sm btn-ghost" id="adminTabMentorsBtn"
+          style="color: var(--blue-deep); border-color: var(--blue-deep);">Manage Mentors</button>
+      </div>
+
+      <!-- Tab 1: Review Queue -->
+      <div id="adminTabQueue">
+        <div class="results-count" style="margin-bottom: 16px;">PENDING CALLS REQUIRING REVIEW</div>
+        <div id="adminQueueList"></div>
+      </div>
+
+      <!-- Tab 2: Manage Mentors -->
+      <div id="adminTabMentors" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px;">
+          <!-- Left: Add Mentor Form -->
+          <div class="card" style="padding: 20px; background: var(--white); height: fit-content; opacity: 1;">
+            <h3
+              style="font-family: var(--mono); font-size: 16px; margin: 0 0 16px; color: var(--blue-deep); border-bottom: 1px dashed var(--paper-line); padding-bottom: 8px;">
+              Add New Mentor</h3>
+            <form id="addMentorForm" style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="form-field">
+                <label>Faculty Name</label>
+                <input type="text" id="mName" required placeholder="e.g. Dr. Nair">
+              </div>
+              <div class="form-field">
+                <label>College</label>
+                <input type="text" id="mCollege" required placeholder="e.g. College of Engineering">
+              </div>
+              <div class="form-field">
+                <label>Department</label>
+                <input type="text" id="mDept" required placeholder="e.g. ECE">
+              </div>
+              <div class="form-field">
+                <label>Contact Info</label>
+                <input type="text" id="mContact" required placeholder="e.g. nair.ece@college.edu">
+              </div>
+              <button type="submit" class="btn btn-solid btn-block" style="margin-top: 6px;">Add Mentor</button>
+            </form>
+          </div>
+
+          <!-- Right: Mentors List -->
+          <div class="card" style="padding: 20px; background: var(--white); opacity: 1;">
+            <h3
+              style="font-family: var(--mono); font-size: 16px; margin: 0 0 16px; color: var(--blue-deep); border-bottom: 1px dashed var(--paper-line); padding-bottom: 8px;">
+              Mentor Directory Management</h3>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                <thead>
+                  <tr
+                    style="border-bottom: 1.5px solid var(--blue-deep); font-family: var(--mono); font-size: 11px; text-transform: uppercase; color: var(--ink-soft);">
+                    <th style="padding: 8px 4px;">Name</th>
+                    <th style="padding: 8px 4px;">Department</th>
+                    <th style="padding: 8px 4px;">College</th>
+                    <th style="padding: 8px 4px; text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminMentorsTableBody">
+                  <!-- Injected in JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
+  </div>
+
+  <!-- How it works modal -->
+  <div class="overlay" id="howItWorksOverlay">
+    <div class="modal" style="max-width: 580px;">
+      <div class="modal-head">
+        <div>
+          <div class="card-dept">Platform Guide</div>
+          <h2>How ProjectHub Works</h2>
+        </div>
+        <button class="modal-close" id="closeHowBtn">✕</button>
+      </div>
+      <div class="modal-body" style="gap: 16px;">
+        <!-- Step 1 -->
+        <div
+          style="display: flex; gap: 16px; align-items: flex-start; border-bottom: 1px dashed var(--paper-line); padding-bottom: 16px;">
+          <img src="how_it_works_1.png"
+            style="width: 120px; height: 90px; object-fit: cover; border: 1.5px solid var(--blue-deep); background: var(--paper);"
+            alt="Step 1">
+          <div>
+            <h3 style="margin: 0 0 6px 0; font-family: var(--mono); font-size: 14.5px; color: var(--blue-deep);">1. Post
+              a Project Call</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.45;">Enter your project
+              details, creator contact info, and select from over 500+ tech tags. Set a review window (1 to 14 days) and
+              guide details.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div
+          style="display: flex; gap: 16px; align-items: flex-start; border-bottom: 1px dashed var(--paper-line); padding-bottom: 16px;">
+          <img src="how_it_works_2.png"
+            style="width: 120px; height: 90px; object-fit: cover; border: 1.5px solid var(--blue-deep); background: var(--paper);"
+            alt="Step 2">
+          <div>
+            <h3 style="margin: 0 0 6px 0; font-family: var(--mono); font-size: 14.5px; color: var(--blue-deep);">2.
+              Organizer Review</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.45;">New project calls enter
+              the review queue. Once approved by an organizer in the separate admin portal, they are pushed live to the
+              top of the feed.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+          <img src="how_it_works_3.png"
+            style="width: 120px; height: 90px; object-fit: cover; border: 1.5px solid var(--blue-deep); background: var(--paper);"
+            alt="Step 3">
+          <div>
+            <h3 style="margin: 0 0 6px 0; font-family: var(--mono); font-size: 14.5px; color: var(--blue-deep);">3. Form
+              Your Team</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.45;">Interested students apply
+              with their LinkedIn profile. Confirmed applications fill slots immediately; subsequent applicants join the
+              waitlist.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project detail modal -->
+  <div class="overlay" id="detailOverlay">
+    <div class="modal" id="detailModal"></div>
+  </div>
+
+  <!-- Post project modal -->
+  <div class="overlay" id="postOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="card-dept">New call</div>
+          <h2>Post a project call</h2>
+        </div>
+        <button class="modal-close" id="closePostBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="msg-banner ok" id="postMsg">Submitted. Your call is now queued for organizer approval.</div>
+        <form class="apply-form" id="postForm">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Your Name</label>
+              <input type="text" id="pCreatorName" required placeholder="e.g. Aditya K.">
+            </div>
+            <div class="form-field">
+              <label>Your LinkedIn Profile</label>
+              <input type="text" id="pCreatorLinkedin" required placeholder="e.g. linkedin.com/in/aditya-k">
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Project title</label>
+            <input type="text" id="pTitle" required placeholder="e.g. Solar-powered water quality monitor">
+          </div>
+          <div class="form-field">
+            <label>Abstract (short)</label>
+            <textarea id="pAbstract" rows="3" required
+              placeholder="What are you building, and what's the goal?"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Lead department</label>
+              <select id="pDept">
+                <option>CSE</option>
+                <option>ECE</option>
+                <option>EEE</option>
+                <option>Mechanical</option>
+                <option>Civil</option>
+                <option>IT</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Team size (incl. you)</label>
+              <input type="number" id="pTeamSize" min="2" max="10" value="4" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Review window (days)</label>
+              <input type="number" id="pWindow" min="1" max="14" value="5" required>
+            </div>
+            <div class="form-field">
+              <label>Mentor / guide</label>
+              <input type="text" id="pMentor" placeholder="e.g. Dr. Nair, ECE">
+            </div>
+          </div>
+          <div class="form-field" style="position: relative;">
+            <label>Keywords (search & select)</label>
+            <input type="text" id="postKwSearch" placeholder="Type to search and add keywords..." autocomplete="off">
+            <div class="kw-dropdown" id="postKwDropdown"></div>
+          </div>
+          <div class="selected-kws-container" id="selectedKwsContainer"></div>
+
+          <div class="helper">New calls enter a review queue and appear on the feed once an organizer approves them —
+            this keeps the directory spam-free.</div>
+          <button type="submit" class="btn btn-solid btn-block">Submit for approval</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 500+ alphabetical engineering & tech keywords
+      const ALL_KEYWORDS = [
+        "3D Printing", "5G Networks", "Acoustic Engineering", "Active Noise Control", "Actuators",
+        "Additive Manufacturing", "Ad-hoc Networks", "Advanced Materials", "Aerodynamics", "Aeronautical Engineering",
+        "Aerospace Avionics", "Aerospace Propulsion", "Agent-based Modeling", "Agile Methodologies", "Agricultural Robotics",
+        "AI Ethics", "Air Quality Monitoring", "Airborne Systems", "Aircraft Design", "Algae Biofuels",
+        "Algorithms", "Anaerobic Digestion", "Analog Circuit Design", "Analog Filters", "Analog-to-Digital Converters",
+        "Antenna Arrays", "Antenna Design", "Aperture Synthesis", "API Design", "App Development",
+        "Aquaponics", "AR/VR Integration", "Artificial Intelligence", "Artificial Neural Networks", "ASIC Design",
+        "Asynchronous Circuits", "Asynchronous Systems", "Atmospheric Chemistry", "Attitude Control", "Audio Processing",
+        "Augmented Reality", "Autoencoders", "Automated Guided Vehicles", "Automated Testing", "Automatic Control",
+        "Automation", "Automotive Electronics", "Automotive Engineering", "Autonomous Driving", "Autonomous Robots",
+        "Autonomous Vehicles", "Avionics", "Backend Development", "Bacterial Genomes", "Battery Management Systems",
+        "Big Data", "Big Data Analytics", "BIM (Building Information Modeling)", "Biochemical Engineering", "Bio-compatible Materials",
+        "Biodegradable Polymers", "Bioelectric Signals", "Bioinformatics", "Biofuels", "Biomass Conversion",
+        "Biomaterials", "Biomechanics", "Biomedical Imaging", "Biomedical Instrumentation", "Biomimicry",
+        "Biophotonics", "Bioprocess Engineering", "Bioreactors", "Bioremediation", "Biosensors",
+        "Bipedal Robots", "Blockchains", "Bluetooth Low Energy", "Brain Imaging", "Brain-Computer Interface",
+        "Bridge Engineering", "Broadband Communication", "Building Materials", "CAD/CAM", "Cadence Virtuoso",
+        "Calman Filtering", "Carbon Capture", "Carbon Nanotubes", "Catalysis", "Cellular Networks",
+        "Centrifugal Pumps", "Ceramic Engineering", "CFD (Computational Fluid Dynamics)", "Chaos Theory", "Chemical Kinetics",
+        "Chemical Process Safety", "Chemical Process Simulation", "Chemical Reactors", "Chromatography", "Circuit Simulation",
+        "Circular Economy", "Civil Infrastructure", "Clean Energy", "Clean Technology", "Client-Server Architecture",
+        "Climate Modeling", "Closed-loop Control", "Cloud Computing", "Cloud Native", "Cloud Orchestration",
+        "Cloud Security", "CNC Machining", "Cognitive Computing", "Cognitive Robotics", "Co-generation",
+        "Collaborative Robots", "Collision Avoidance", "Combustion Engines", "Communication Protocols", "Compiler Design",
+        "Composite Materials", "Composite Structures", "Computational Geometry", "Computer Architecture", "Computer Vision",
+        "Concrete Technology", "Control Systems", "Controller Area Network (CAN)", "Convective Heat Transfer", "Convolutional Neural Networks",
+        "Corrosion Engineering", "Cosmology", "CRISPR/Cas9", "Cryogenic Systems", "Cryptography",
+        "Cybersecurity", "Cyber-Physical Systems", "D3.js Visualization", "Data Mining", "Data Pipelines",
+        "Data Science", "Data Warehousing", "Database Administration", "Database Tuning", "Decarbonization",
+        "Deep Learning", "Deep Neural Networks", "Deep Reinforcement Learning", "Deformation Mechanics", "Desalination",
+        "DevOps", "Digital Circuit Design", "Digital Communications", "Digital Electronics", "Digital Filters",
+        "Digital Image Processing", "Digital Signal Processing (DSP)", "Digital Twins", "Direct Air Capture", "Disaster Recovery",
+        "Discrete Event Simulation", "Distributed Consensus", "Distributed Databases", "Distributed Ledgers", "Distributed Systems",
+        "Django Framework", "Docker Containers", "Drainage Systems", "Drones", "Drug Delivery Systems",
+        "Dynamic Positioning", "Dynamic Programming", "Dynamic Systems", "Earthquake Engineering", "Edge Computing",
+        "Elasticsearch", "Electric Machines", "Electric Power Transmission", "Electric Powertrain", "Electric Propulsion",
+        "Electric Vehicles", "Electrical Grids", "Electrochemistry", "Electroencephalography (EEG)", "Electromagnetic Compatibility (EMC)",
+        "Electromagnetics", "Electromechanical Systems", "Electron Microscopy", "Electronic Warfare", "Embedded C",
+        "Embedded Firmware", "Embedded Linux", "Embedded Systems", "EMI/EMC Testing", "Emotion Recognition",
+        "Energy Harvesting", "Energy Storage", "Enhanced Oil Recovery", "Enterprise Architecture", "Environmental Engineering",
+        "Environmental Impact Assessment", "Environmental Monitoring", "Ergonomics", "ESP32", "ESP8266",
+        "Ethical AI", "Ethical Hacking", "Ethernet Protocols", "Evolutionary Algorithms", "Experimental Fluid Mechanics",
+        "Explainable AI", "Extract-Transform-Load (ETL)", "Failure Mode Analysis", "Fast Fourier Transform (FFT)", "Fatigue Analysis",
+        "Fault Detection", "Fault Tolerant Systems", "Feature Engineering", "Federated Learning", "Feedback Control",
+        "Fermentation Technology", "Fiber Optic Communications", "Figma Design", "Finite Element Analysis (FEA)", "Fire Protection Engineering",
+        "Firmware Development", "Flash Memory Systems", "Flight Control Dynamics", "Flight Simulation", "Fluid Dynamics",
+        "Fluid Mechanics", "Fluidics", "Flutter App Dev", "Flywheel Energy Storage", "Food Engineering",
+        "Forensic Engineering", "Foundry Engineering", "FPGA Programming", "Fracture Mechanics", "Frontend Development",
+        "Fuel Cells", "Full-Stack Development", "Full-stack Web Dev", "Fuzzy Logic Systems", "Game Development",
+        "GANs (Generative Adversarial Networks)", "Gas Turbines", "Gene Editing", "Genetic Algorithms", "Genome Sequencing",
+        "Geotechnical Engineering", "Geothermal Energy", "GIS Mapping", "Glassmorphism UI", "Global Positioning System (GPS)",
+        "Graph Databases", "GraphQL APIs", "Green Chemistry", "Green Computing", "Groundwater Hydrology",
+        "gRPC Communications", "Haptic Feedback", "Hazardous Waste Management", "Headless CMS", "Heat Exchangers",
+        "Heat Transfer", "High-frequency Trading Systems", "High-Performance Computing (HPC)", "High-Voltage Engineering", "Homomorphic Encryption",
+        "Human-Computer Interaction (HCI)", "Humanoid Robotics", "Human-Robot Interaction", "HVAC Systems", "Hybrid Electric Vehicles",
+        "Hybrid Microgrids", "Hydraulic Fracturing", "Hydraulic Systems", "Hydraulics", "Hydroelectric Power",
+        "Hydrology", "Hydroponics", "Hyperledger Blockchain", "Hyperloop Technology", "Image Processing",
+        "Industrial Automation", "Industrial IoT", "Industrial Mechatronics", "Industry 4.0", "Inertial Navigation Systems",
+        "Information Security", "Information Theory", "Infrastructure as Code", "Instrumentation", "Integrated Circuit Design",
+        "Intelligent Transportation", "Interdisciplinary Engineering", "Internet of Robotic Things", "Internet of Things (IoT)", "Intrusion Detection Systems",
+        "iOS Development", "IPFS (InterPlanetary File System)", "Iron and Steel Metallurgy", "Irrigation Engineering", "Java Programming",
+        "JavaScript", "Kafka Messaging", "Kalman Filters", "Kinematics", "Kotlin Development",
+        "Kubernetes Orchestration", "Land Surveying", "Landfill Engineering", "Laser Technology", "Lean Six Sigma",
+        "Li-Fi (Light Fidelity)", "Lidar Systems", "Light-emitting Diodes (LEDs)", "Linear Programming", "Linear Regression",
+        "Linux System Administration", "Liquid Cooling", "Load Balancing", "Low-code Platforms", "Low-power Electronics",
+        "Machine Learning", "Machine Tool Design", "Machine Translation", "Manufacturing Processes", "Marine Engineering",
+        "Mass Transfer", "Materials Characterization", "Materials Science", "MATLAB Simulation", "Mechanical Design",
+        "Mechatronics", "Medical Devices", "Medical Robotics", "MEMS (Micro-Electro-Mechanical Systems)", "Metaheuristics",
+        "Metallurgy", "Micro-grids", "Microbial Fuel Cells", "Microbiology", "Microcontrollers",
+        "Microfluidics", "Microprocessors", "Microservices Architecture", "Microwave Engineering", "Mixed Reality",
+        "Mixed-Signal Design", "Mobile App Development", "Model Predictive Control", "Molecular Dynamics", "MongoDB",
+        "MQTT Protocol", "Multi-agent Systems", "Multicast Communication", "Multi-criteria Decision Making", "Multi-phase Flow",
+        "Multi-phase Flow Simulation", "MySQL Databases", "Nanobiotechnology", "Nanocomposites", "Nanofabrication",
+        "Nanomaterials", "Nanophotonics", "Nanotechnology", "Natural Language Processing (NLP)", "Navigation Systems",
+        "Network Security", "Neural Networks", "Next.js", "Noise, Vibration, and Harshness (NVH)", "Nondestructive Testing",
+        "NoSQL Databases", "Nuclear Fusion", "Nuclear Reactor Design", "Numerical Analysis", "Numerical Weather Prediction",
+        "Nuxt.js", "Object-Oriented Programming", "OpenCV Library", "OpenGL rendering", "Open-source Software",
+        "Operations Research", "Optoelectronics", "Orbital Mechanics", "Organic Electronics", "Organic Photovoltaics",
+        "Organic Synthesis", "OS Kernel Development", "Oscilloscopes", "Overfitting Mitigation", "Packet Switching",
+        "Parallel Computing", "Pavement Design", "PCB Design", "Penetration Testing", "Petroleum Reservoir Engineering",
+        "Pharmaceutical Engineering", "Photovoltaics", "Pipeline Automation", "PLC Programming", "Pneumatic Systems",
+        "Polymer Chemistry", "Polymer Processing", "PostgreSQL", "Power Electronics", "Power Grids",
+        "Power Systems Analysis", "Precision Agriculture", "Predictive Analytics", "Predictive Maintenance", "Process Integration",
+        "Process Intensification", "Product Design", "Propulsion Systems", "Proteomics", "Pulp and Paper Technology",
+        "Pumping Systems", "PyTorch Library", "Quality Assurance", "Quantitative Finance", "Quantum Computing",
+        "Quantum Cryptography", "Quantum Information", "R Programming", "Radar Systems", "Radiation Shielding",
+        "Radio Astronomy", "Radio Frequency (RF) Design", "Rapid Prototyping", "Reaction Kinetics", "React.js",
+        "Real-time Operating Systems (RTOS)", "Real-time Systems", "Receiver Design", "Recommender Systems", "Redux State Management",
+        "Regenerative Braking", "Regression Analysis", "Reinforcement Learning", "Reliability Engineering", "Remote Sensing",
+        "Renewable Energy Integration", "Reservoir Simulation", "RESTful APIs", "Reverse Engineering", "RF Circuit Design",
+        "Risk Assessment", "Robot Operating System (ROS)", "Robotic Arm Control", "Robotics", "Rocket Propulsion",
+        "Rust Programming", "Satellite Communications", "SCADA Systems", "Security Auditing", "Self-healing Materials",
+        "Semiconductor Physics", "Sensor Fusion", "Sensors", "Separation Processes", "Serverless Computing",
+        "Signal Integrity", "Signal Processing", "Smart Cities", "Smart Grids", "Smart Materials",
+        "Smart Metering", "Smart Transportation", "Soft Robotics", "Software Defined Networking (SDN)", "Software Engineering",
+        "Soil Mechanics", "Soil-Moisture Sensors", "Solar Photovoltaics", "Solar Thermal Energy", "Solid Mechanics",
+        "SolidWorks Design", "Sonar Systems", "Space Mission Design", "Space Systems", "Spectroscopy",
+        "Speech Recognition", "SPICE Simulation", "Statistical Inference", "Statistical Process Control", "Stochastic Processes",
+        "Strain Gauge Instrumentation", "Structural Analysis", "Structural Design", "Structural Dynamics", "Structural Health Monitoring",
+        "Subsea Engineering", "Superconductors", "Supply Chain Logistics", "Surveying", "Sustainable Architecture",
+        "Sustainable Design", "Swarm Robotics", "Swift UI", "Synthetic Biology", "Synthetic Data Generation",
+        "System Dynamics", "System Integration", "Systems Engineering", "Tailwind CSS", "Telecommunications",
+        "Telemedicine Technology", "TensorFlow Framework", "Thermal Comfort", "Thermal Insulation", "Thermal Management",
+        "Thermodynamics", "Thermoelectrics", "Three.js Library", "Tidal Energy", "Tissue Engineering",
+        "Traffic Engineering", "Transducers", "Transformers (ML Models)", "Transient Analysis", "Transmission Lines",
+        "Transportation Systems", "Tribology", "Turbine Blades", "Turbomachinery", "TypeScript",
+        "UAVs (Drones)", "UI/UX Design", "Underwater Acoustics", "Unit Testing", "Unity Game Engine",
+        "Unreal Engine", "Unsupervised Learning", "Urban Planning", "Vector Databases", "Verilog HDL",
+        "VHDL", "Vibration Analysis", "Vibration Isolation", "Virtual Commissioning", "Virtual Reality",
+        "Vite.js", "VLSI Design", "Vue.js", "Waste Management", "Wastewater Treatment", "Waste-to-Energy",
+        "Water Resource Management", "Wave Energy", "Wearable Technology", "Web Development", "Web Scraping",
+        "Web Security", "Web3 Technology", "WebGL Rendering", "WebRTC Protocols", "WebSockets",
+        "Wind Turbines", "Wireless Communication", "Wireless Power Transfer", "Wireless Sensor Networks", "Xcode",
+        "XML Schema", "YAML Configuration", "Zero-emission Vehicles", "Zigbee Communication", "Zig Programming"
+      ];
+
+      let initialProjects = [
+        {
+          id: 1, title: "Smart Irrigation with Soil-Moisture IoT", dept: "ECE", abstract: "A low-cost sensor mesh that reads soil moisture, temperature and rainfall forecasts, then drives a valve controller to cut water use on the campus garden plots. Looking for a firmware person and someone comfortable with a dashboard.",
+          keywords: ["IoT", "Embedded Systems", "Automation"], teamSize: 4, filled: 2, daysLeft: 4, windowDays: 5, mentor: "Dr. Menon, ECE",
+          creatorName: "Aditya K.", creatorLinkedin: "linkedin.com/in/aditya-k",
+          applicants: [{ name: "Anjali R.", dept: "ECE, Sem 5", status: "main", linkedin: "linkedin.com/in/anjali-r" },
+          { name: "Karthik S.", dept: "CSE, Sem 5", status: "main", linkedin: "linkedin.com/in/karthik-s" },
+          { name: "Meera T.", dept: "CSE, Sem 3", status: "wait", linkedin: "linkedin.com/in/meera-t" }]
+        },
+        {
+          id: 2, title: "Sign Language Translator using Computer Vision", dept: "CSE", abstract: "Real-time hand-gesture recognition that converts Indian Sign Language into text and speech, aimed at making campus help-desks more accessible. Model is half-trained; need help with a mobile front end and more labelled data.",
+          keywords: ["Computer Vision", "Machine Learning", "App Development"], teamSize: 5, filled: 4, daysLeft: 1, windowDays: 5, mentor: "Prof. Iyer, CSE",
+          creatorName: "Fathima K.", creatorLinkedin: "linkedin.com/in/fathima-k",
+          applicants: [{ name: "Rahul P.", dept: "CSE, Sem 7", status: "main", linkedin: "linkedin.com/in/rahul-p" },
+          { name: "Fathima K.", dept: "CSE, Sem 7", status: "main", linkedin: "linkedin.com/in/fathima-k" },
+          { name: "Naveen J.", dept: "IT, Sem 5", status: "main", linkedin: "linkedin.com/in/naveen-j" },
+          { name: "Sruthi V.", dept: "CSE, Sem 5", status: "main", linkedin: "linkedin.com/in/sruthi-v" }]
+        },
+        {
+          id: 3, title: "8-bit ALU Layout in 180nm VLSI", dept: "ECE", abstract: "Full schematic-to-layout flow for an 8-bit arithmetic logic unit as a teaching reference for the VLSI lab. Needs one more person comfortable with Cadence Virtuoso for the layout stage.",
+          keywords: ["VLSI", "PCB Design"], teamSize: 3, filled: 2, daysLeft: 6, windowDays: 7, mentor: "Dr. Suresh, ECE",
+          creatorName: "Devika M.", creatorLinkedin: "linkedin.com/in/devika-m",
+          applicants: [{ name: "Devika M.", dept: "ECE, Sem 6", status: "main", linkedin: "linkedin.com/in/devika-m" },
+          { name: "Arjun B.", dept: "ECE, Sem 6", status: "main", linkedin: "linkedin.com/in/arjun-b" }]
+        },
+        {
+          id: 4, title: "Campus Navigation in AR", dept: "IT", abstract: "An AR overlay that guides freshers between blocks using the phone camera, with shortest-path routing between departments and event halls. Core routing engine is done; needs a Unity/AR Foundation collaborator.",
+          keywords: ["AR/VR", "App Development", "UI/UX"], teamSize: 4, filled: 1, daysLeft: 5, windowDays: 5, mentor: "Dr. Thomas, IT",
+          creatorName: "Vishnu K.", creatorLinkedin: "linkedin.com/in/vishnu-k",
+          applicants: [{ name: "Vishnu K.", dept: "IT, Sem 5", status: "main", linkedin: "linkedin.com/in/vishnu-k" }]
+        },
+        {
+          id: 5, title: "Peer Study-Notes Exchange (Web)", dept: "CSE", abstract: "A lightweight platform for students to trade verified lecture notes by course code, with an upvote system to surface the best set before exams. MVP schema is ready; need a frontend and a moderation flow.",
+          keywords: ["Web Development", "UI/UX"], teamSize: 4, filled: 3, daysLeft: 0, windowDays: 5, mentor: "Prof. Das, CSE",
+          creatorName: "Ananya S.", creatorLinkedin: "linkedin.com/in/ananya-s",
+          applicants: [{ name: "Ananya S.", dept: "CSE, Sem 3", status: "main", linkedin: "linkedin.com/in/ananya-s" },
+          { name: "Vivek N.", dept: "CSE, Sem 3", status: "main", linkedin: "linkedin.com/in/vivek-n" },
+          { name: "Priya L.", dept: "IT, Sem 3", status: "main", linkedin: "linkedin.com/in/priya-l" }]
+        },
+        {
+          id: 6, title: "Structural Health Monitoring for a Footbridge Model", dept: "Civil", abstract: "Strain-gauge instrumentation on a scaled footbridge model to demonstrate real-time load monitoring, paired with a simple alert system. Looking for an ECE student to help with the sensor-to-cloud pipeline.",
+          keywords: ["Structural Design", "IoT"], teamSize: 4, filled: 2, daysLeft: 3, windowDays: 6, mentor: "Dr. Pillai, Civil",
+          creatorName: "Gokul R.", creatorLinkedin: "linkedin.com/in/gokul-r", isNewToday: true,
+          applicants: [{ name: "Gokul R.", dept: "Civil, Sem 5", status: "main", linkedin: "linkedin.com/in/gokul-r" },
+          { name: "Nisha P.", dept: "Civil, Sem 5", status: "main", linkedin: "linkedin.com/in/nisha-p" }]
+        }
+      ];
+
+      let initialMentors = [
+        { id: 1, name: "Dr. Menon", college: "College of Engineering", dept: "ECE", contact: "menon.ece@college.edu" },
+        { id: 2, name: "Prof. Iyer", college: "College of Engineering", dept: "CSE", contact: "iyer.cse@college.edu" },
+        { id: 3, name: "Dr. Suresh", college: "College of Engineering", dept: "ECE", contact: "suresh.ece@college.edu" },
+        { id: 4, name: "Dr. Thomas", college: "Institute of Technology", dept: "IT", contact: "thomas.it@inst.edu" },
+        { id: 5, name: "Prof. Das", college: "College of Engineering", dept: "CSE", contact: "das.cse@college.edu" },
+        { id: 6, name: "Dr. Pillai", college: "College of Engineering", dept: "Civil", contact: "pillai.civil@college.edu" }
+      ];
+
+      // LocalStorage state syncing
+      let projects = JSON.parse(localStorage.getItem('ph_projects')) || initialProjects;
+      let pendingQueue = JSON.parse(localStorage.getItem('ph_pending')) || [];
+      let mentors = JSON.parse(localStorage.getItem('ph_mentors')) || initialMentors;
+      let nextId = parseInt(localStorage.getItem('ph_nextId')) || 7;
+      let nextMentorId = parseInt(localStorage.getItem('ph_nextMentorId')) || 7;
+
+      function saveToStorage() {
+        localStorage.setItem('ph_projects', JSON.stringify(projects));
+        localStorage.setItem('ph_pending', JSON.stringify(pendingQueue));
+        localStorage.setItem('ph_mentors', JSON.stringify(mentors));
+        localStorage.setItem('ph_nextId', nextId);
+        localStorage.setItem('ph_nextMentorId', nextMentorId);
+      }
+
+      // ---------- ANIMATED CANVAS BACKGROUND ----------
+      const canvas = document.getElementById('bgCanvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let clicks = [];
+      let mouse = { x: null, y: null, radius: 150 };
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+      window.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+      });
+
+      window.addEventListener('click', (e) => {
+        clicks.push({
+          x: e.clientX,
+          y: e.clientY,
+          radius: 0,
+          maxRadius: 100,
+          opacity: 0.6
+        });
+      });
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.45;
+          this.vy = (Math.random() - 0.5) * 0.45;
+          this.radius = Math.random() * 2 + 1;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(111, 198, 217, 0.45)';
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        particles = [];
+        const count = Math.min(65, Math.floor((canvas.width * canvas.height) / 24000));
+        for (let i = 0; i < count; i++) {
+          particles.push(new Particle());
+        }
+      }
+      initParticles();
+      window.addEventListener('resize', initParticles);
+
+      function animateCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 100) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(111, 198, 217, ${0.18 * (1 - dist / 100)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+
+          if (mouse.x !== null) {
+            const dx = particles[i].x - mouse.x;
+            const dy = particles[i].y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < mouse.radius) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.strokeStyle = `rgba(232, 163, 61, ${0.28 * (1 - dist / mouse.radius)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        clicks.forEach((c, idx) => {
+          c.radius += 3.5;
+          c.opacity -= 0.016;
+
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(232, 163, 61, ${c.opacity})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          if (c.opacity <= 0 || c.radius >= c.maxRadius) {
+            clicks.splice(idx, 1);
+          }
+        });
+
+        requestAnimationFrame(animateCanvas);
+      }
+      animateCanvas();
+
+      // ---------- SPA ROUTING ----------
+      const tabs = document.querySelectorAll('.nav-tab');
+      const views = {
+        feed: document.getElementById('feedView'),
+        mentors: document.getElementById('mentorsView'),
+        admin: document.getElementById('adminView')
+      };
+
+      function switchPage(pageId) {
+        localStorage.setItem('ph_activePage', pageId);
+
+        tabs.forEach(tab => {
+          if (tab.dataset.page === pageId) {
+            tab.classList.add('active');
+          } else {
+            tab.classList.remove('active');
+          }
+        });
+
+        Object.keys(views).forEach(key => {
+          const view = views[key];
+          if (key === pageId) {
+            view.style.display = 'block';
+            void view.offsetWidth; // Trigger layout reflow
+            view.classList.add('active-view');
+          } else {
+            view.classList.remove('active-view');
+            view.style.display = 'none';
+          }
+        });
+
+        if (pageId === 'feed') {
+          renderGrid();
+        } else if (pageId === 'mentors') {
+          renderMentors();
+        } else if (pageId === 'admin') {
+          renderAdminPortal();
+        }
+      }
+
+      tabs.forEach(tab => {
+        tab.onclick = () => {
+          switchPage(tab.dataset.page);
+        };
+      });
+
+      // ---------- FEED VIEW PROJECTS SEARCH & RECOMMENDATIONS ----------
+      const grid = document.getElementById('grid');
+      const searchInput = document.getElementById('searchInput');
+      const searchSuggestions = document.getElementById('searchSuggestions');
+      const emptyState = document.getElementById('emptyState');
+      const resultsCount = document.getElementById('resultsCount');
+
+      function gaugeClass(daysLeft, windowDays) {
+        const ratio = daysLeft / windowDays;
+        if (daysLeft <= 0) return 'danger';
+        if (ratio <= 0.34) return 'warn';
+        return '';
+      }
+
+      function matches(p, q) {
+        if (!q) return true;
+        const searchVal = q.toLowerCase();
+        const hay = (p.title + ' ' + p.dept + ' ' + p.creatorName + ' ' + p.keywords.join(' ')).toLowerCase();
+        return hay.includes(searchVal);
+      }
+
+      function renderGrid() {
+        const q = searchInput.value.trim();
+        // Sort projects by ID descending (newest calls at the top)
+        const visible = projects.filter(p => p.daysLeft > -1 && matches(p, q)).sort((a, b) => b.id - a.id);
+        grid.innerHTML = '';
+        emptyState.style.display = visible.length ? 'none' : 'block';
+        resultsCount.textContent = visible.length + ' open call' + (visible.length === 1 ? '' : 's');
+
+        visible.forEach((p, idx) => {
+          const gClass = gaugeClass(p.daysLeft, p.windowDays);
+          const pct = Math.max(4, Math.round((p.daysLeft / p.windowDays) * 100));
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style = `animation-delay: ${idx * 45}ms;`;
+          card.innerHTML = `
+        <div class="card-head">
+          <div class="card-dept">${p.dept}</div>
+          <h3 class="card-title">${p.title}</h3>
+        </div>
+        <div class="card-body">
+          <div class="card-abstract">${p.abstract}</div>
+          <div class="tag-row">${p.keywords.map(k => `<span class="tag">${k}</span>`).join('')}</div>
+          <div class="slot-row">
+            <span>${p.filled}/${p.teamSize} slots filled</span>
+            <span class="slot-dots">${Array.from({ length: p.teamSize }).map((_, i) => `<span class="dot ${i < p.filled ? 'filled' : ''}"></span>`).join('')}</span>
+          </div>
+          <div class="gauge-wrap">
+            <div class="gauge-label"><span>Review window</span><span>${p.daysLeft <= 0 ? 'closes today' : p.daysLeft + ' day' + (p.daysLeft === 1 ? '' : 's') + ' left'}</span></div>
+            <div class="gauge"><div class="gauge-fill ${gClass}" style="width:${pct}%"></div><div class="gauge-ticks"></div></div>
+          </div>
+        </div>
+        <div class="card-foot">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-soft);">${p.mentor}</span>
+            <span style="font-size:11.5px;color:var(--blue-deep);">By: <strong>${p.creatorName}</strong></span>
+          </div>
+          <button class="btn btn-outline btn-sm" data-id="${p.id}">View &amp; apply</button>
+        </div>`;
+          card.querySelector('button').onclick = () => openDetail(p.id);
+          grid.appendChild(card);
+        });
+
+        const activeProjects = projects.filter(p => p.daysLeft > -1);
+
+        const elStatOpen = document.getElementById('statOpen');
+        if (elStatOpen) elStatOpen.textContent = activeProjects.length;
+
+        const elStatOpenHero = document.getElementById('statOpenHero');
+        if (elStatOpenHero) elStatOpenHero.textContent = activeProjects.length;
+
+        const elStatDept = document.getElementById('statDept');
+        if (elStatDept) elStatDept.textContent = new Set(projects.map(p => p.dept)).size;
+
+        const elStatMentorsHero = document.getElementById('statMentorsHero');
+        if (elStatMentorsHero) elStatMentorsHero.textContent = mentors.length;
+
+        const elStatNewToday = document.getElementById('statNewTodayHero');
+        if (elStatNewToday) {
+          elStatNewToday.textContent = projects.filter(p => p.daysLeft > -1 && (p.id >= 6 || p.isNewToday)).length;
+        }
+
+        applyCardTiltEffect();
+      }
+
+      // Autocomplete Suggestions rendering
+      function renderSearchSuggestions() {
+        const val = searchInput.value.trim().toLowerCase();
+        searchSuggestions.innerHTML = '';
+
+        if (val.length === 0) {
+          searchSuggestions.classList.remove('show');
+          return;
+        }
+
+        // Filter keywords from the 500+ keywords list
+        const matches = ALL_KEYWORDS.filter(kw => kw.toLowerCase().includes(val)).slice(0, 10);
+
+        if (matches.length === 0) {
+          searchSuggestions.classList.remove('show');
+          return;
+        }
+
+        matches.forEach(match => {
+          const div = document.createElement('div');
+          div.className = 'suggestion-item';
+          div.textContent = match;
+          div.onclick = () => {
+            searchInput.value = match;
+            searchSuggestions.classList.remove('show');
+            renderGrid();
+          };
+          searchSuggestions.appendChild(div);
+        });
+
+        searchSuggestions.classList.add('show');
+      }
+
+      searchInput.addEventListener('input', () => {
+        renderSearchSuggestions();
+        renderGrid();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (e.target !== searchInput && e.target !== searchSuggestions) {
+          searchSuggestions.classList.remove('show');
+        }
+      });
+
+      // ---------- MENTORS VIEW DIRECTORY ----------
+      function renderMentors() {
+        const mGrid = document.getElementById('mentorsGrid');
+        mGrid.innerHTML = '';
+
+        mentors.forEach((m, idx) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style = `animation-delay: ${idx * 40}ms;`;
+          card.innerHTML = `
+        <div class="card-head">
+          <div class="card-dept">${m.dept} &middot; ${m.college}</div>
+          <h3 class="card-title">${m.name}</h3>
+        </div>
+        <div class="card-body">
+          <p style="font-size:13px; line-height:1.5; color:var(--ink-soft); margin:0 0 10px;">Available to guide research, review digital logic schematics, or evaluate embedded system hardware boards.</p>
+          <div style="font-family:var(--mono); font-size:12px; margin-top:auto; padding-top:10px; border-top:1px dashed var(--paper-line);">
+            <span style="color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px;">Contact Details</span>
+            <strong style="color:var(--blue-deep); word-break:break-all;">${m.contact}</strong>
+          </div>
+        </div>
+      `;
+          mGrid.appendChild(card);
+        });
+
+        document.getElementById('statMentors').textContent = mentors.length;
+        document.getElementById('statMentorDepts').textContent = new Set(mentors.map(m => m.dept)).size;
+        applyCardTiltEffect();
+      }
+
+      // ---------- ADMIN PORTAL LOGIN & ACTIONS ----------
+      const adminLoginForm = document.getElementById('adminLoginForm');
+      const adminUser = document.getElementById('adminUser');
+      const adminPass = document.getElementById('adminPass');
+      const loginError = document.getElementById('loginError');
+      const adminLoginArea = document.getElementById('adminLoginArea');
+      const adminDashboard = document.getElementById('adminDashboard');
+      const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+      const adminTabQueueBtn = document.getElementById('adminTabQueueBtn');
+      const adminTabMentorsBtn = document.getElementById('adminTabMentorsBtn');
+      const adminTabQueue = document.getElementById('adminTabQueue');
+      const adminTabMentors = document.getElementById('adminTabMentors');
+
+      let isAdminLoggedIn = localStorage.getItem('ph_admin_logged') === 'true';
+
+      function renderAdminPortal() {
+        if (isAdminLoggedIn) {
+          adminLoginArea.style.display = 'none';
+          adminDashboard.style.display = 'block';
+          renderQueue();
+          renderAdminMentorsTable();
+        } else {
+          adminLoginArea.style.display = 'block';
+          adminDashboard.style.display = 'none';
+        }
+      }
+
+      adminLoginForm.onsubmit = (e) => {
+        e.preventDefault();
+        const user = adminUser.value.trim();
+        const pass = adminPass.value.trim();
+
+        if (user === 'admin' && pass === 'admin123') {
+          isAdminLoggedIn = true;
+          localStorage.setItem('ph_admin_logged', 'true');
+          loginError.style.display = 'none';
+          adminLoginForm.reset();
+          renderAdminPortal();
+        } else {
+          loginError.style.display = 'block';
+        }
+      };
+
+      adminLogoutBtn.onclick = () => {
+        isAdminLoggedIn = false;
+        localStorage.setItem('ph_admin_logged', 'false');
+        renderAdminPortal();
+      };
+
+      // Admin Dashboard Tabs
+      adminTabQueueBtn.onclick = () => {
+        adminTabQueueBtn.className = 'btn btn-sm btn-solid';
+        adminTabMentorsBtn.className = 'btn btn-sm btn-ghost';
+        adminTabQueueBtn.style.color = '';
+        adminTabQueueBtn.style.borderColor = '';
+        adminTabMentorsBtn.style.color = 'var(--blue-deep)';
+        adminTabMentorsBtn.style.borderColor = 'var(--blue-deep)';
+        adminTabQueue.style.display = 'block';
+        adminTabMentors.style.display = 'none';
+      };
+
+      adminTabMentorsBtn.onclick = () => {
+        adminTabQueueBtn.className = 'btn btn-sm btn-ghost';
+        adminTabMentorsBtn.className = 'btn btn-sm btn-solid';
+        adminTabQueueBtn.style.color = 'var(--blue-deep)';
+        adminTabQueueBtn.style.borderColor = 'var(--blue-deep)';
+        adminTabMentorsBtn.style.color = '';
+        adminTabMentorsBtn.style.borderColor = '';
+        adminTabQueue.style.display = 'none';
+        adminTabMentors.style.display = 'block';
+        renderAdminMentorsTable();
+      };
+
+      // Add Mentor Handler
+      const addMentorForm = document.getElementById('addMentorForm');
+      const adminMentorsTableBody = document.getElementById('adminMentorsTableBody');
+
+      addMentorForm.onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById('mName').value.trim();
+        const college = document.getElementById('mCollege').value.trim();
+        const dept = document.getElementById('mDept').value.trim();
+        const contact = document.getElementById('mContact').value.trim();
+
+        if (!name || !college || !dept || !contact) return;
+
+        const newMentor = {
+          id: nextMentorId++,
+          name,
+          college,
+          dept,
+          contact
+        };
+
+        mentors.push(newMentor);
+        saveToStorage();
+        addMentorForm.reset();
+        renderAdminMentorsTable();
+      };
+
+      function renderAdminMentorsTable() {
+        adminMentorsTableBody.innerHTML = '';
+        if (mentors.length === 0) {
+          adminMentorsTableBody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center; color: var(--ink-soft); font-family: var(--mono);">No mentors added yet.</td></tr>';
+          return;
+        }
+
+        mentors.forEach(m => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px dashed var(--paper-line)';
+          tr.innerHTML = `
+        <td style="padding: 10px 4px; font-weight: bold; color: var(--blue-deep);">${m.name}</td>
+        <td style="padding: 10px 4px; font-family: var(--mono);">${m.dept}</td>
+        <td style="padding: 10px 4px;">${m.college}</td>
+        <td style="padding: 10px 4px; text-align: right;">
+          <button class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 11px; border-color: var(--danger); color: var(--danger);" data-id="${m.id}">Delete</button>
+        </td>
+      `;
+          tr.querySelector('button').onclick = () => {
+            if (confirm(`Delete mentor ${m.name}?`)) {
+              mentors = mentors.filter(x => x.id !== m.id);
+              saveToStorage();
+              renderAdminMentorsTable();
+            }
+          };
+          adminMentorsTableBody.appendChild(tr);
+        });
+      }
+
+      // Render Project Review Queue
+      function renderQueue() {
+        const list = document.getElementById('adminQueueList');
+        list.innerHTML = '';
+        if (!pendingQueue.length) {
+          list.innerHTML = '<div class="helper" style="padding:12px 0;">Queue is empty — nothing waiting on approval.</div>';
+          return;
+        }
+        pendingQueue.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'queue-card';
+          row.innerHTML = `
+        <div class="qtext">
+          <b>${item.title}</b><br>
+          <span style="color:var(--ink-soft); font-size: 12.5px;">
+            Dept: ${item.dept} &middot; Size: ${item.teamSize} &middot; Window: ${item.windowDays} days &middot; Guide: ${item.mentor}<br>
+            Creator: ${item.creatorName} (${item.creatorLinkedin})
+          </span>
+        </div>
+        <div class="queue-actions">
+          <button class="btn btn-outline btn-sm" style="border-color: var(--danger); color: var(--danger);" data-act="reject">Reject</button>
+          <button class="btn btn-solid btn-sm" data-act="approve">Approve</button>
+        </div>`;
+
+          row.querySelector('[data-act="approve"]').onclick = () => {
+            projects.unshift({
+              ...item,
+              id: item.id,
+              filled: 0,
+              daysLeft: item.windowDays,
+              applicants: [],
+              isNewToday: true
+            });
+            pendingQueue = pendingQueue.filter(x => x.id !== item.id);
+            saveToStorage();
+            renderQueue();
+            renderGrid();
+          };
+          row.querySelector('[data-act="reject"]').onclick = () => {
+            pendingQueue = pendingQueue.filter(x => x.id !== item.id);
+            saveToStorage();
+            renderQueue();
+          };
+          list.appendChild(row);
+        });
+      }
+
+      // ---------- DETAILS VIEW MODAL ----------
+      const detailOverlay = document.getElementById('detailOverlay');
+      const detailModal = document.getElementById('detailModal');
+
+      function openDetail(id) {
+        const p = projects.find(x => x.id === id);
+        const full = p.filled >= p.teamSize;
+        detailModal.innerHTML = `
+      <div class="modal-head">
+        <div>
+          <div class="card-dept">${p.dept} &middot; ${p.mentor}</div>
+          <h2>${p.title}</h2>
+        </div>
+        <button class="modal-close" id="mClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="modal-section-label">Abstract</div>
+          <p>${p.abstract}</p>
+        </div>
+        
+        <div style="background: var(--paper); border: 1px solid var(--paper-line); padding: 12px 16px; border-radius: var(--radius); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+          <div>
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 2px;">Project Called By</span>
+            <strong style="font-size: 15px; color: var(--blue-deep);">${p.creatorName}</strong>
+          </div>
+          <div>
+            <a href="https://${p.creatorLinkedin}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="font-family: var(--mono); font-size: 11.5px; border-color: var(--blue-mid); color: var(--blue-mid); text-decoration: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 5px; vertical-align: middle; display: inline-block;"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.8v8.37h2.8v-4.67c0-.25.02-.5.1-.68a1.14 1.14 0 0 1 1-.77c.76 0 1 .52 1 1.29v4.83h2.8M6.5 8.37a1.37 1.37 0 1 0 0-2.75 1.37 1.37 0 0 0 0 2.75M8 18.5V10.13H5V18.5h3z"/></svg>
+              View LinkedIn
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-section-label">Review window</div>
+          <div class="gauge-wrap">
+            <div class="gauge-label"><span>${p.filled}/${p.teamSize} slots filled</span><span>${p.daysLeft <= 0 ? 'closes today' : p.daysLeft + ' day' + (p.daysLeft === 1 ? '' : 's') + ' left'}</span></div>
+            <div class="gauge"><div class="gauge-fill ${gaugeClass(p.daysLeft, p.windowDays)}" style="width:${Math.max(4, Math.round((p.daysLeft / p.windowDays) * 100))}%"></div><div class="gauge-ticks"></div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-section-label">Current applicant pool (${p.applicants.length})</div>
+          <div class="applicant-list">
+            ${p.applicants.map(a => `<div class="applicant ${a.status === 'wait' ? 'waitlist' : ''}">
+              <span>${a.name} &middot; ${a.dept}</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <a href="https://${a.linkedin}" target="_blank" rel="noopener noreferrer">${a.linkedin}</a>
+                <span class="status-pill ${a.status === 'main' ? 'main' : 'wait'}">${a.status === 'main' ? 'confirmed' : 'waitlist'}</span>
+              </span>
+            </div>`).join('') || '<div class="helper">No applicants yet — be the first.</div>'}
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-section-label">${full ? 'Join the waitlist' : 'Apply for a slot'}</div>
+          <div class="msg-banner ok" id="applyMsg">${full ? "Added to the waitlist — you'll be notified if a confirmed slot opens up." : "You're in! The project creator can now see your LinkedIn profile."}</div>
+          <form class="apply-form" id="applyForm">
+            <div class="form-row">
+              <div class="form-field"><label>Name</label><input type="text" required id="aName"></div>
+              <div class="form-field"><label>Semester</label><input type="text" required id="aSem" placeholder="e.g. Sem 5"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label>Department</label>
+                <select id="aDept"><option>CSE</option><option>ECE</option><option>EEE</option><option>Mechanical</option><option>Civil</option><option>IT</option></select>
+              </div>
+              <div class="form-field"><label>LinkedIn URL</label><input type="text" required id="aLinkedin" placeholder="linkedin.com/in/you"></div>
+            </div>
+            <div class="helper">No phone numbers, no chat handles — just your LinkedIn, so the creator can reach you professionally.</div>
+            <button type="submit" class="btn ${full ? 'btn-outline' : 'btn-solid'} btn-block">${full ? 'Join waitlist' : 'Reserve my slot'}</button>
+          </form>
+        </div>
+      </div>`;
+
+        detailModal.querySelector('#mClose').onclick = closeDetail;
+        detailModal.querySelector('#applyForm').onsubmit = function (e) {
+          e.preventDefault();
+          const name = document.getElementById('aName').value.trim();
+          const sem = document.getElementById('aSem').value.trim();
+          const dept = document.getElementById('aDept').value;
+          const li = document.getElementById('aLinkedin').value.trim();
+          if (!name || !sem || !li) return;
+          const status = p.filled >= p.teamSize ? 'wait' : 'main';
+          p.applicants.push({ name, dept: dept + ', ' + sem, status, linkedin: li });
+          if (status === 'main') p.filled += 1;
+          saveToStorage();
+          renderGrid();
+          openDetail(id); // Re-render details view
+          const msg = document.getElementById('applyMsg');
+          msg.classList.add('show');
+        };
+        detailOverlay.classList.add('show');
+      }
+
+      function closeDetail() { detailOverlay.classList.remove('show'); }
+      detailOverlay.addEventListener('click', e => { if (e.target === detailOverlay) closeDetail(); });
+
+      // ---------- HOW IT WORKS MODAL HANDLERS ----------
+      const howItWorksOverlay = document.getElementById('howItWorksOverlay');
+      document.getElementById('howItWorksBtn').onclick = () => {
+        howItWorksOverlay.classList.add('show');
+      };
+      document.getElementById('closeHowBtn').onclick = () => {
+        howItWorksOverlay.classList.remove('show');
+      };
+      howItWorksOverlay.addEventListener('click', e => {
+        if (e.target === howItWorksOverlay) {
+          howItWorksOverlay.classList.remove('show');
+        }
+      });
+
+      // ---------- POST PROJECT MODAL & KEYWORDS SELECTION ----------
+      const postOverlay = document.getElementById('postOverlay');
+      const postKwSearch = document.getElementById('postKwSearch');
+      const postKwDropdown = document.getElementById('postKwDropdown');
+      const selectedKwsContainer = document.getElementById('selectedKwsContainer');
+      let pickedKw = new Set();
+
+      document.getElementById('postBtn').onclick = () => {
+        document.getElementById('postMsg').classList.remove('show');
+        document.getElementById('postForm').reset();
+        pickedKw.clear();
+        renderSelectedKeywords();
+        postOverlay.classList.add('show');
+      };
+      document.getElementById('closePostBtn').onclick = () => postOverlay.classList.remove('show');
+      postOverlay.addEventListener('click', e => { if (e.target === postOverlay) postOverlay.classList.remove('show'); });
+
+      function renderSelectedKeywords() {
+        selectedKwsContainer.innerHTML = '';
+        pickedKw.forEach(kw => {
+          const span = document.createElement('span');
+          span.className = 'selected-kw-tag';
+          span.innerHTML = `
+        ${kw}
+        <button type="button" class="remove-kw-btn">&times;</button>
+      `;
+          span.querySelector('button').onclick = () => {
+            pickedKw.delete(kw);
+            renderSelectedKeywords();
+          };
+          selectedKwsContainer.appendChild(span);
+        });
+      }
+
+      function renderKwDropdown() {
+        const val = postKwSearch.value.trim().toLowerCase();
+        postKwDropdown.innerHTML = '';
+
+        // Filter out keywords already selected
+        let list = ALL_KEYWORDS.filter(kw => !pickedKw.has(kw));
+        if (val.length > 0) {
+          list = list.filter(kw => kw.toLowerCase().includes(val));
+        }
+
+        list.sort(); // Sort alphabetically
+
+        // Limit to top 25 to ensure viewability
+        const displayList = list.slice(0, 25);
+
+        if (displayList.length === 0) {
+          postKwDropdown.classList.remove('show');
+          return;
+        }
+
+        displayList.forEach(kw => {
+          const item = document.createElement('div');
+          item.className = 'kw-dropdown-item';
+          item.textContent = kw;
+          item.onclick = () => {
+            pickedKw.add(kw);
+            postKwSearch.value = '';
+            renderSelectedKeywords();
+            postKwDropdown.classList.remove('show');
+            postKwSearch.focus();
+          };
+          postKwDropdown.appendChild(item);
+        });
+
+        postKwDropdown.classList.add('show');
+      }
+
+      postKwSearch.addEventListener('focus', renderKwDropdown);
+      postKwSearch.addEventListener('input', renderKwDropdown);
+
+      document.addEventListener('click', (e) => {
+        if (e.target !== postKwSearch && e.target !== postKwDropdown) {
+          postKwDropdown.classList.remove('show');
+        }
+      });
+
+      // Project Post submit logic
+      document.getElementById('postForm').onsubmit = function (e) {
+        e.preventDefault();
+        const title = document.getElementById('pTitle').value.trim();
+        const abstract = document.getElementById('pAbstract').value.trim();
+        const dept = document.getElementById('pDept').value;
+        const teamSize = parseInt(document.getElementById('pTeamSize').value, 10);
+        const windowDays = parseInt(document.getElementById('pWindow').value, 10);
+        const mentor = document.getElementById('pMentor').value.trim() || 'Guide TBA';
+        const creatorName = document.getElementById('pCreatorName').value.trim();
+        const creatorLinkedin = document.getElementById('pCreatorLinkedin').value.trim();
+
+        if (!title || !abstract || !creatorName || !creatorLinkedin) return;
+
+        pendingQueue.push({
+          id: nextId++,
+          title,
+          abstract,
+          dept,
+          teamSize,
+          windowDays,
+          mentor,
+          creatorName,
+          creatorLinkedin,
+          keywords: Array.from(pickedKw)
+        });
+        saveToStorage();
+
+        document.getElementById('postMsg').classList.add('show');
+        renderQueue();
+        setTimeout(() => { postOverlay.classList.remove('show'); }, 950);
+      };
+
+      function applyCardTiltEffect() {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+          card.style.transition = 'transform 0.1s ease, box-shadow 0.1s ease';
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -6;
+            const rotateY = ((x - centerX) / centerX) * 6;
+
+            card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate(-2px, -2px)`;
+            card.style.boxShadow = `8px 8px 0 var(--blue-deep)`;
+          });
+
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+            card.style.boxShadow = '';
+            card.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+          });
+        });
+      }
+
+      // INITIAL LOAD SETUPS
+      const activePage = localStorage.getItem('ph_activePage') || 'feed';
+      switchPage(activePage);
+    })();
+  </script>
+</body>
+
+</html>
