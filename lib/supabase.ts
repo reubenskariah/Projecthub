@@ -13,4 +13,11 @@ if (supabaseUrl && !supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith
   }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// On the server side (like in server actions), use the service role key if configured
+// to bypass RLS policies for admin mutations, while keeping client calls bound by RLS.
+const isServer = typeof window === 'undefined';
+const supabaseKey = (isServer && process.env.SUPABASE_SERVICE_ROLE_KEY) 
+  ? process.env.SUPABASE_SERVICE_ROLE_KEY 
+  : supabaseAnonKey;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
