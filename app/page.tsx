@@ -785,9 +785,12 @@ export default function HomePage() {
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
-                  1
-                </div>
+                <img
+                  src="/how_it_works_1.png"
+                  style={{ width: '120px', height: '90px', objectFit: 'cover', border: '1.5px solid var(--blue-deep)', background: 'var(--paper)' }}
+                  alt="Step 1"
+                  className="flex-shrink-0"
+                />
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Create and Submit a Project Call</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
@@ -797,9 +800,12 @@ export default function HomePage() {
               </div>
 
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
-                  2
-                </div>
+                <img
+                  src="/how_it_works_2.png"
+                  style={{ width: '120px', height: '90px', objectFit: 'cover', border: '1.5px solid var(--blue-deep)', background: 'var(--paper)' }}
+                  alt="Step 2"
+                  className="flex-shrink-0"
+                />
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Spam Verification & Live Feed</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
@@ -809,9 +815,12 @@ export default function HomePage() {
               </div>
 
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
-                  3
-                </div>
+                <img
+                  src="/how_it_works_3.png"
+                  style={{ width: '120px', height: '90px', objectFit: 'cover', border: '1.5px solid var(--blue-deep)', background: 'var(--paper)' }}
+                  alt="Step 3"
+                  className="flex-shrink-0"
+                />
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Team Match & Slot Reservations</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
@@ -821,9 +830,12 @@ export default function HomePage() {
               </div>
 
               <div className="flex gap-4 items-start">
-                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
-                  4
-                </div>
+                <img
+                  src="/how_it_works_4.png"
+                  style={{ width: '120px', height: '90px', objectFit: 'cover', border: '1.5px solid var(--blue-deep)', background: 'var(--paper)' }}
+                  alt="Step 4"
+                  className="flex-shrink-0"
+                />
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Automatic Close & Email Matching Report</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
