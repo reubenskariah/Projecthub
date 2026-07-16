@@ -8,6 +8,15 @@ function isDbConfigured() {
   return !!(url && key && !url.includes('placeholder-url') && !key.includes('placeholder-anon'));
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 const ENV_ERROR = {
   success: false,
   error: 'Supabase environment variables are missing on Vercel. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel Project Settings and redeploy.'
@@ -47,12 +56,24 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     const abstract = formData.get('abstract') as string;
     const caller_name = formData.get('caller_name') as string;
     const caller_dept = formData.get('caller_dept') as string;
+    const caller_email = formData.get('caller_email') as string;
     const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
     const review_days = parseInt(formData.get('review_days') as string, 10);
 
-    if (!title || !abstract || !caller_name || !caller_dept || isNaN(slots_needed) || isNaN(review_days)) {
+    if (!title || !abstract || !caller_name || !caller_dept || !caller_email || isNaN(slots_needed) || isNaN(review_days)) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
+
+    // Strict regex email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(caller_email.trim())) {
+      return { success: false, error: 'Please enter a valid email address (e.g. name@college.edu).' };
+    }
+
+    // Escape HTML tags to prevent Cross-Site Scripting (XSS)
+    const escapedTitle = escapeHtml(title);
+    const escapedAbstract = escapeHtml(abstract);
+    const escapedCallerName = escapeHtml(caller_name);
 
     // Dynamically calculate expires_at (Current date + review_days)
     const expiresAt = new Date();
@@ -62,10 +83,11 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     const { data, error } = await supabase
       .from('projects')
       .insert({
-        title,
-        abstract,
-        caller_name,
+        title: escapedTitle,
+        abstract: escapedAbstract,
+        caller_name: escapedCallerName,
         caller_dept,
+        caller_email: caller_email.trim(),
         slots_needed,
         review_days,
         expires_at: expiresAt.toISOString(),

@@ -782,40 +782,56 @@ export default function HomePage() {
               </div>
               <button className="modal-close cursor-pointer" onClick={() => setIsHowItWorksOpen(false)}>✕</button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
-                  Step 1
+                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
+                  1
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>1. Post a Project Call</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Create and Submit a Project Call</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Enter project details, abstract, lead department and keyword tags. Set review window (1 to 14 days).
+                    Click the <strong>"+ Call for a project"</strong> button. Enter your name, lead department, title, abstract, and a <strong>Private Personal Email</strong> (which is kept hidden from the public feed). Select up to 10 keyword tags and set a review window from 1 to 14 days.
                   </p>
                 </div>
               </div>
+
               <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
-                  Step 2
+                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
+                  2
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>2. Active Feed Listings</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Spam Verification & Live Feed</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    New project calls enter the review queue. Once approved by an organizer, they appear live at the top of the feed.
+                    To maintain directory quality, new project calls enter a review queue. Once approved by an administrator, your listing immediately goes live and appears at the top of the campus feed.
                   </p>
                 </div>
               </div>
+
+              <div className="flex gap-4 items-start border-b border-dashed border-[#c9d6d1] pb-4">
+                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
+                  3
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Team Match & Slot Reservations</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
+                    Students browse listings and click <strong>"View & Apply"</strong> to reserve open slots by entering their details and <strong>LinkedIn profile URL</strong>. If the target slots are full, students can join the waitlist buffer.
+                  </p>
+                </div>
+              </div>
+
               <div className="flex gap-4 items-start">
-                <div className="w-[120px] h-[90px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono">
-                  Step 3
+                <div className="w-[80px] h-[80px] flex-shrink-0 bg-[#eef2ee] border border-[#0f2a47] flex items-center justify-center font-bold text-[#0f2a47] font-mono text-lg">
+                  4
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>3. Match and Apply</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Automatic Close & Email Matching Report</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Browse listings, filter by keyword recommendations, and reserve slots with verified LinkedIn URLs.
+                    When your review window expires, the project automatically closes and disappears from the public feed. An <strong>automated matching report</strong> listing the names, semesters, and direct LinkedIn profile links of all applicants is instantly emailed to your private email address.
                   </p>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

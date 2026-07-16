@@ -133,6 +133,19 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
               />
             </div>
             <div className="form-field">
+              <label>Your Email <span className="text-[10px] text-[#e8a33d] font-mono font-semibold">(Private - Hidden from feed)</span></label>
+              <input
+                type="email"
+                name="caller_email"
+                required
+                placeholder="e.g. aditya@college.edu"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-field">
               <label>Lead department</label>
               <select name="caller_dept" required>
                 <option value="ECE">ECE</option>
@@ -145,6 +158,9 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
                 <option value="ECS">ECS</option>
                 <option value="RB">RB</option>
               </select>
+            </div>
+            <div className="form-field">
+              {/* Spacer for 2-column alignment layout balance */}
             </div>
           </div>
 
