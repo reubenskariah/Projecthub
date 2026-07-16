@@ -2,6 +2,17 @@
 
 import { supabase } from '@/lib/supabase';
 
+function isDbConfigured() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return !!(url && key && !url.includes('placeholder-url') && !key.includes('placeholder-anon'));
+}
+
+const ENV_ERROR = {
+  success: false,
+  error: 'Supabase environment variables are missing on Vercel. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel Project Settings and redeploy.'
+};
+
 export interface ProjectCall {
   id: string;
   title: string;
@@ -30,6 +41,7 @@ export interface Applicant {
  * Creates a new project call, calculates the expiration date, and inserts it with status set to 'pending'.
  */
 export async function createProjectCall(formData: FormData, selectedKeywords: string[]) {
+  if (!isDbConfigured()) return ENV_ERROR;
   try {
     const title = formData.get('title') as string;
     const abstract = formData.get('abstract') as string;
@@ -79,6 +91,7 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
  * Fetches active projects from the database, nested-selecting applicants in a single query.
  */
 export async function fetchActiveProjects(keywordFilter?: string) {
+  if (!isDbConfigured()) return { success: false, error: ENV_ERROR.error, data: [] };
   try {
     let query = supabase
       .from('projects')
@@ -124,6 +137,7 @@ export async function fetchActiveProjects(keywordFilter?: string) {
  * Fetches all pending projects (status = 'pending') for the admin queue.
  */
 export async function fetchPendingProjects() {
+  if (!isDbConfigured()) return { success: false, error: ENV_ERROR.error, data: [] };
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -147,6 +161,7 @@ export async function fetchPendingProjects() {
  * Fetches all projects (both active and pending) for the admin directory, nested-selecting applicants in a single query.
  */
 export async function fetchAllProjects() {
+  if (!isDbConfigured()) return { success: false, error: ENV_ERROR.error, data: [] };
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -180,6 +195,7 @@ export async function fetchAllProjects() {
  * Approves a project call: sets status to 'active' and bumps created_at to NOW() (putting it at top of feed).
  */
 export async function approveProjectCall(projectId: string) {
+  if (!isDbConfigured()) return ENV_ERROR;
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -207,6 +223,7 @@ export async function approveProjectCall(projectId: string) {
  * Deletes a project call: ensures related applicant bookings are deleted first to avoid FK constraint errors.
  */
 export async function deleteProjectCall(projectId: string) {
+  if (!isDbConfigured()) return ENV_ERROR;
   try {
     // 1. Delete associated applicant bookings first
     const { error: appDeleteError } = await supabase
@@ -245,6 +262,7 @@ export async function reserveProjectSlot(
   projectId: string,
   applicant: { name: string; dept_sem: string; linkedin_url: string }
 ) {
+  if (!isDbConfigured()) return ENV_ERROR;
   try {
     if (!applicant.name || !applicant.dept_sem || !applicant.linkedin_url) {
       return { success: false, error: 'Name, Dept/Sem, and LinkedIn URL are all required.' };
@@ -329,6 +347,7 @@ export async function reserveProjectSlot(
  * Fetches mentors from the database. Falls back if table doesn't exist.
  */
 export async function fetchMentors() {
+  if (!isDbConfigured()) return { success: false, isTableMissing: true, data: [] };
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -354,6 +373,7 @@ export async function fetchMentors() {
  * Adds a new mentor to the database.
  */
 export async function addMentor(mentor: { name: string; college: string; dept: string; contact: string }) {
+  if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -384,6 +404,7 @@ export async function addMentor(mentor: { name: string; college: string; dept: s
  * Updates an existing mentor in the database.
  */
 export async function updateMentor(mentor: { id: string; name: string; college: string; dept: string; contact: string }) {
+  if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -415,6 +436,7 @@ export async function updateMentor(mentor: { id: string; name: string; college: 
  * Deletes a mentor from the database.
  */
 export async function deleteMentor(mentorId: string) {
+  if (!isDbConfigured()) return { success: false, isTableMissing: true };
   try {
     const { error } = await supabase
       .from('mentors')
