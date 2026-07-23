@@ -215,7 +215,7 @@ export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: P
                 type="number"
                 name="slots_needed"
                 min={2}
-                max={20}
+                max={6}
                 defaultValue={4}
                 required
               />

@@ -569,13 +569,23 @@ export default function AdminPage() {
                           </div>
                           <div className="form-field">
                             <label>Department</label>
-                            <input
-                              type="text"
-                              required
+                            <select
                               value={mDept}
                               onChange={(e) => setMDept(e.target.value)}
-                              placeholder="e.g. ECE"
-                            />
+                              required
+                              style={{ border: '1.5px solid var(--paper-line)', padding: '10px 11px', fontSize: '13.5px', borderRadius: 'var(--radius)', background: 'var(--white)', fontFamily: 'var(--sans)', color: 'var(--ink)' }}
+                            >
+                              <option value="">Select Department</option>
+                              <option value="ECE">ECE</option>
+                              <option value="CSE">CSE</option>
+                              <option value="CE">CE</option>
+                              <option value="ME">ME</option>
+                              <option value="CHE">CHE</option>
+                              <option value="FT">FT</option>
+                              <option value="EV">EV</option>
+                              <option value="ECS">ECS</option>
+                              <option value="RB">RB</option>
+                            </select>
                           </div>
                           <div className="form-field">
                             <label>Contact Info</label>

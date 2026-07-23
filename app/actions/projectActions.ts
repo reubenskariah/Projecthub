@@ -65,6 +65,10 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
+    if (slots_needed < 2 || slots_needed > 6) {
+      return { success: false, error: 'Team size must be between 2 and 6 participants.' };
+    }
+
     // Backend length limits for spam control
     if (title.length > 200) {
       return { success: false, error: 'Project title exceeds maximum length of 200 characters.' };
@@ -544,6 +548,10 @@ export async function updateProjectAsCreator(
 
     if (!title || !abstract || !caller_dept || isNaN(slots_needed) || isNaN(review_days) || !callerEmail || !passkey) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
+    }
+
+    if (slots_needed < 2 || slots_needed > 6) {
+      return { success: false, error: 'Team size must be between 2 and 6 participants.' };
     }
 
     // Backend length limits for spam control

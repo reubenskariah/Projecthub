@@ -1216,7 +1216,7 @@ export default function HomePage() {
                         type="number"
                         name="slots_needed"
                         min={2}
-                        max={20}
+                        max={6}
                         value={editSlotsNeeded}
                         onChange={(e) => setEditSlotsNeeded(parseInt(e.target.value, 10))}
                         required
