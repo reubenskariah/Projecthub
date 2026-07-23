@@ -516,3 +516,136 @@ export async function deleteMentor(mentorId: string, adminPass: string) {
   }
 }
 
+/**
+ * Updates a project call by the creator, verifying the creator's email address.
+ */
+export async function updateProjectAsCreator(
+  projectId: string,
+  callerEmail: string,
+  formData: FormData,
+  selectedKeywords: string[]
+) {
+  if (!isDbConfigured()) return ENV_ERROR;
+  try {
+    const title = formData.get('title') as string;
+    const abstract = formData.get('abstract') as string;
+    const caller_dept = formData.get('caller_dept') as string;
+    const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
+    const review_days = parseInt(formData.get('review_days') as string, 10);
+
+    if (!title || !abstract || !caller_dept || isNaN(slots_needed) || isNaN(review_days) || !callerEmail) {
+      return { success: false, error: 'Missing or invalid fields in form submission.' };
+    }
+
+    // Backend length limits for spam control
+    if (title.length > 200) {
+      return { success: false, error: 'Project title exceeds maximum length of 200 characters.' };
+    }
+    if (abstract.length > 5000) {
+      return { success: false, error: 'Project abstract exceeds maximum length of 5000 characters.' };
+    }
+
+    // Fetch the project to verify caller email
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('caller_email, status')
+      .eq('id', projectId)
+      .single();
+
+    if (fetchError || !project) {
+      return { success: false, error: 'Project not found.' };
+    }
+
+    if (project.caller_email.toLowerCase().trim() !== callerEmail.toLowerCase().trim()) {
+      return { success: false, error: 'Unauthorized: The provided email does not match the project creator\'s email.' };
+    }
+
+    // Escape HTML tags to prevent XSS
+    const escapedTitle = escapeHtml(title);
+    const escapedAbstract = escapeHtml(abstract);
+
+    // Dynamically calculate expires_at (Current date + review_days)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + review_days);
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
+        title: escapedTitle,
+        abstract: escapedAbstract,
+        caller_dept,
+        slots_needed,
+        review_days,
+        expires_at: expiresAt.toISOString(),
+        keywords: selectedKeywords
+      })
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error updating project:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error('Error in updateProjectAsCreator server action:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.' };
+  }
+}
+
+/**
+ * Deletes a project call by the creator, verifying the creator's email address.
+ */
+export async function deleteProjectAsCreator(projectId: string, callerEmail: string) {
+  if (!isDbConfigured()) return ENV_ERROR;
+  if (!callerEmail) {
+    return { success: false, error: 'Email is required to delete the project.' };
+  }
+  try {
+    // Fetch the project to verify caller email
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('caller_email')
+      .eq('id', projectId)
+      .single();
+
+    if (fetchError || !project) {
+      return { success: false, error: 'Project not found.' };
+    }
+
+    if (project.caller_email.toLowerCase().trim() !== callerEmail.toLowerCase().trim()) {
+      return { success: false, error: 'Unauthorized: The provided email does not match the project creator\'s email.' };
+    }
+
+    // Delete associated applicant bookings first
+    const { error: appDeleteError } = await supabase
+      .from('applicants')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (appDeleteError) {
+      console.error('Supabase error deleting applicants for project:', appDeleteError);
+      return { success: false, error: appDeleteError.message };
+    }
+
+    // Delete the project record
+    const { error: projectDeleteError } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (projectDeleteError) {
+      console.error('Supabase error deleting project:', projectDeleteError);
+      return { success: false, error: projectDeleteError.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in deleteProjectAsCreator server action:', err);
+    return { success: false, error: err.message || 'An unexpected error occurred.' };
+  }
+}
+
+

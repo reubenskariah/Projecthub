@@ -3,19 +3,22 @@ import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
-    // 1. Verify Vercel Cron authorization header
+    // 1. Verify Vercel Cron authorization header (bypassed in development mode)
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const cronSecret = process.env.CRON_SECRET;
+    const isDev = process.env.NODE_ENV === 'development';
+
+    if (!isDev && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const now = new Date().toISOString();
 
-    // 2. Fetch up to 15 expired active projects with unsent emails
+    // 2. Fetch up to 15 expired active or closed projects with unsent emails
     const { data: expiredProjects, error: fetchError } = await supabase
       .from('projects')
       .select('*, applicants(*)')
-      .eq('status', 'active')
+      .in('status', ['active', 'closed'])
       .eq('email_sent', false)
       .lte('expires_at', now)
       .limit(15);
@@ -110,7 +113,15 @@ export async function POST(req: Request) {
       // 4. Send email via Resend API POST request
       const resendApiKey = process.env.RESEND_API_KEY;
       if (!resendApiKey) {
-        console.error('RESEND_API_KEY is not defined in environment variables.');
+        console.error('RESEND_API_KEY is not defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
+        await supabase
+          .from('projects')
+          .update({
+            status: 'closed',
+            email_sent: true
+          })
+          .eq('id', project.id);
+        processed.push(project.id);
         continue; 
       }
 
@@ -131,18 +142,30 @@ export async function POST(req: Request) {
         })
       });
 
+      let setSent = false;
       if (emailResponse.ok) {
-        // 5. Update database flag immediately after successful dispatch
-        await supabase
-          .from('projects')
-          .update({ email_sent: true })
-          .eq('id', project.id);
-        
-        processed.push(project.id);
+        setSent = true;
       } else {
         const errorText = await emailResponse.text();
         console.error(`Resend API failed for project ${project.id}:`, errorText);
+        
+        // Handle permanent Resend API client errors gracefully to prevent infinite cron loops
+        if (emailResponse.status === 400 || emailResponse.status === 401 || emailResponse.status === 403 || emailResponse.status === 422) {
+          console.warn(`Permanent email dispatch failure for project ${project.id} (Status ${emailResponse.status}). Marking email_sent = true to prevent blocking the cron queue.`);
+          setSent = true;
+        }
       }
+
+      // 5. Always update status to closed and set the computed email_sent status
+      await supabase
+        .from('projects')
+        .update({
+          status: 'closed',
+          email_sent: setSent
+        })
+        .eq('id', project.id);
+      
+      processed.push(project.id);
     }
 
     return NextResponse.json({ success: true, processedCount: processed.length, processedIds: processed });

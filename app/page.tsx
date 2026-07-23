@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ProjectForm from '@/components/ProjectForm';
-import { fetchActiveProjects, reserveProjectSlot, fetchMentors } from '@/app/actions/projectActions';
+import { fetchActiveProjects, reserveProjectSlot, fetchMentors, updateProjectAsCreator, deleteProjectAsCreator } from '@/app/actions/projectActions';
 import { PRESET_KEYWORDS } from '@/lib/keywords';
 
 interface Applicant {
@@ -70,6 +70,22 @@ export default function HomePage() {
   const [applyLinkedin, setApplyLinkedin] = useState('');
   const [applyMessage, setApplyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [submittingApply, setSubmittingApply] = useState(false);
+
+  // Creator edit/delete states
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
+  const [creatorEmail, setCreatorEmail] = useState('');
+
+  // Edit form states (mirroring ProjectForm fields but populated from selectedProject)
+  const [editTitle, setEditTitle] = useState('');
+  const [editAbstract, setEditAbstract] = useState('');
+  const [editDept, setEditDept] = useState('CSE');
+  const [editSlotsNeeded, setEditSlotsNeeded] = useState(4);
+  const [editReviewDays, setEditReviewDays] = useState(5);
+  const [editKeywords, setEditKeywords] = useState<string[]>([]);
+  const [editKeywordSearch, setEditKeywordSearch] = useState('');
+  const [editSuggestions, setEditSuggestions] = useState<string[]>([]);
+  const [showEditSuggestionsDropdown, setShowEditSuggestionsDropdown] = useState(false);
 
   // Fetch active projects from the server action
   const loadProjects = async (kw?: string) => {
@@ -385,6 +401,116 @@ export default function HomePage() {
     }
   };
 
+  // Creator helper functions and action handlers
+  const startEditing = () => {
+    if (!selectedProject) return;
+    setEditTitle(selectedProject.title);
+    setEditAbstract(selectedProject.abstract);
+    setEditDept(selectedProject.caller_dept);
+    setEditSlotsNeeded(selectedProject.slots_needed);
+    setEditReviewDays(selectedProject.review_days);
+    setEditKeywords(selectedProject.keywords || []);
+    setCreatorEmail('');
+    setApplyMessage(null);
+    setIsEditingProject(true);
+    setIsDeletingProject(false);
+  };
+
+  const startDeleting = () => {
+    setCreatorEmail('');
+    setApplyMessage(null);
+    setIsDeletingProject(true);
+    setIsEditingProject(false);
+  };
+
+  const cancelCreatorAction = () => {
+    setIsEditingProject(false);
+    setIsDeletingProject(false);
+    setCreatorEmail('');
+    setApplyMessage(null);
+  };
+
+  const handleEditKeywordSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEditKeywordSearch(val);
+    if (val.trim().length >= 2) {
+      const matches = PRESET_KEYWORDS.filter((kw) =>
+        kw.toLowerCase().includes(val.toLowerCase()) && !editKeywords.includes(kw)
+      ).slice(0, 10);
+      setEditSuggestions(matches);
+      setShowEditSuggestionsDropdown(true);
+    } else {
+      setEditSuggestions([]);
+      setShowEditSuggestionsDropdown(false);
+    }
+  };
+
+  const handleSelectEditKeyword = (keyword: string) => {
+    if (editKeywords.length >= 10) {
+      setApplyMessage({ type: 'error', text: 'You can select up to 10 keywords maximum.' });
+      setEditKeywordSearch('');
+      setShowEditSuggestionsDropdown(false);
+      return;
+    }
+    setEditKeywords([...editKeywords, keyword]);
+    setEditKeywordSearch('');
+    setShowEditSuggestionsDropdown(false);
+  };
+
+  const handleRemoveEditKeyword = (keyword: string) => {
+    setEditKeywords(editKeywords.filter((k) => k !== keyword));
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setSubmittingApply(true);
+    setApplyMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const res = await updateProjectAsCreator(selectedProject.id, creatorEmail, formData, editKeywords);
+    
+    if (res.success) {
+      setApplyMessage({ type: 'success', text: 'Project call successfully updated!' });
+      setIsEditingProject(false);
+      
+      // Reload projects
+      const updated = await fetchActiveProjects(selectedKeyword || undefined);
+      if (updated.success && updated.data) {
+        const freshList = updated.data as Project[];
+        setProjects(freshList);
+        const match = freshList.find((x) => x.id === selectedProject.id);
+        if (match) {
+          setSelectedProject(match);
+        } else {
+          setSelectedProject(null);
+        }
+      }
+    } else {
+      setApplyMessage({ type: 'error', text: res.error || 'Failed to update project.' });
+    }
+    setSubmittingApply(false);
+  };
+
+  const handleDeleteConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setSubmittingApply(true);
+    setApplyMessage(null);
+
+    const res = await deleteProjectAsCreator(selectedProject.id, creatorEmail);
+    if (res.success) {
+      alert('Project call deleted successfully.');
+      setIsDeletingProject(false);
+      setSelectedProject(null);
+      // Reload projects
+      loadProjects(selectedKeyword || undefined);
+    } else {
+      setApplyMessage({ type: 'error', text: res.error || 'Failed to delete project.' });
+    }
+    setSubmittingApply(false);
+  };
+
   return (
     <>
       {/* Background Canvas */}
@@ -695,10 +821,6 @@ export default function HomePage() {
               })}
             </main>
           )}
-
-          <footer>
-            PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel
-          </footer>
         </div>
       )}
 
@@ -749,10 +871,6 @@ export default function HomePage() {
               </div>
             ))}
           </main>
-
-          <footer>
-            PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel
-          </footer>
         </div>
       )}
 
@@ -851,157 +969,350 @@ export default function HomePage() {
 
       {/* MODAL 3: Project Detail and Apply Modal */}
       {selectedProject && (
-        <div className="overlay show" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) setSelectedProject(null); }}>
+        <div className="overlay show" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelectedProject(null); cancelCreatorAction(); } }}>
           <div className="modal max-w-[640px] m-auto">
             <div className="modal-head">
               <div>
-                <div className="card-dept">{selectedProject.caller_dept}</div>
-                <h2>{selectedProject.title}</h2>
+                <div className="card-dept">{isEditingProject ? 'Edit Call' : isDeletingProject ? 'Delete Call' : selectedProject.caller_dept}</div>
+                <h2>{isEditingProject ? 'Modify Project Call' : isDeletingProject ? 'Confirm Deletion' : selectedProject.title}</h2>
               </div>
-              <button className="modal-close cursor-pointer" onClick={() => setSelectedProject(null)}>✕</button>
+              <button className="modal-close cursor-pointer" onClick={() => { setSelectedProject(null); cancelCreatorAction(); }}>✕</button>
             </div>
             
             <div className="modal-body">
-              <div>
-                <div className="modal-section-label">Abstract</div>
-                <p>{selectedProject.abstract}</p>
-              </div>
-
-              <div style={{ background: 'var(--paper)', border: '1px solid var(--paper-line)', padding: '12px 16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-                <div>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '2px' }}>Project Called By</span>
-                  <strong style={{ fontSize: '15px', color: 'var(--blue-deep)' }}>{selectedProject.caller_name}</strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--blue-mid)', fontWeight: 'bold' }}>PROJECT CREATOR</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="modal-section-label">Review Window</div>
-                {(() => {
-                  const apps = selectedProject.applicants || [];
-                  const confirmedCount = apps.filter(a => a.status === 'confirmed').length;
-                  const daysLeft = getDaysLeft(selectedProject.expires_at);
-                  const pct = Math.max(4, Math.round((daysLeft / selectedProject.review_days) * 100));
-                  
-                  return (
-                    <div className="gauge-wrap">
-                      <div className="gauge-label font-bold">
-                        <span>{confirmedCount}/{selectedProject.slots_needed} slots filled</span>
-                        <span>{daysLeft <= 0 ? 'closes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}</span>
-                      </div>
-                      <div className="gauge mt-1">
-                        <div
-                          className={`gauge-fill ${getGaugeClass(daysLeft, selectedProject.review_days)}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                        <div className="gauge-ticks" />
-                      </div>
+              {isEditingProject ? (
+                /* EDIT FORM VIEW */
+                <form onSubmit={handleEditSubmit} className="apply-form">
+                  {applyMessage && (
+                    <div className={`msg-banner ${applyMessage.type === 'success' ? 'ok show' : 'error show'} mb-3`}>
+                      {applyMessage.text}
                     </div>
-                  );
-                })()}
-              </div>
-
-              <div>
-                <div className="modal-section-label">Current Applicant Pool ({(selectedProject.applicants || []).length})</div>
-                <div className="applicant-list">
-                  {(selectedProject.applicants || []).length === 0 ? (
-                    <div className="helper italic text-center p-3 border border-dashed border-[#c9d6d1] bg-[var(--paper)]">
-                      No applicants yet — be the first to apply.
-                    </div>
-                  ) : (
-                    (selectedProject.applicants || []).map((app, index) => (
-                      <div key={index} className={`applicant ${app.status === 'waitlist' ? 'waitlist' : ''}`}>
-                        <span>{app.name} &middot; {app.dept_sem}</span>
-                        <span className="flex items-center gap-2">
-                          <a href={app.linkedin_url.startsWith('http') ? app.linkedin_url : `https://${app.linkedin_url}`} target="_blank" rel="noopener noreferrer">
-                            LinkedIn
-                          </a>
-                          <span className={`status-pill ${app.status === 'confirmed' ? 'main' : 'wait'}`}>
-                            {app.status === 'confirmed' ? 'confirmed' : 'waitlist'}
-                          </span>
-                        </span>
-                      </div>
-                    ))
                   )}
-                </div>
-              </div>
-
-              {/* Join project form */}
-              {(() => {
-                const apps = selectedProject.applicants || [];
-                const confirmedCount = apps.filter(a => a.status === 'confirmed').length;
-                const totalCount = apps.length;
-                const isFull = confirmedCount >= selectedProject.slots_needed;
-                const isBufferLimit = totalCount >= (selectedProject.slots_needed * 2);
-
-                if (isBufferLimit) {
-                  return (
-                    <div className="border-t border-[#c9d6d1] pt-4">
-                      <div className="modal-section-label">Apply for a slot</div>
-                      <div className="p-3.5 bg-red-50 text-[#c1502e] border border-[#c1502e] rounded-sm text-xs font-semibold text-center">
-                        This project matches oversubscription limits. The waitlist buffer is completely full.
-                      </div>
+                  <div className="form-field">
+                    <label>Project Title</label>
+                    <input
+                      type="text"
+                      name="title"
+                      required
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Project title"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Abstract (short)</label>
+                    <textarea
+                      name="abstract"
+                      rows={3}
+                      required
+                      value={editAbstract}
+                      onChange={(e) => setEditAbstract(e.target.value)}
+                      placeholder="What are you building, and what's the goal?"
+                    />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Lead Department</label>
+                      <select name="caller_dept" value={editDept} onChange={(e) => setEditDept(e.target.value)}>
+                        <option value="ECE">ECE</option>
+                        <option value="CSE">CSE</option>
+                        <option value="CE">CE</option>
+                        <option value="ME">ME</option>
+                        <option value="CHE">CHE</option>
+                        <option value="FT">FT</option>
+                        <option value="EV">EV</option>
+                        <option value="ECS">ECS</option>
+                        <option value="RB">RB</option>
+                      </select>
                     </div>
-                  );
-                }
-
-                return (
-                  <div className="border-t border-dashed border-[#c9d6d1] pt-4">
-                    <div className="modal-section-label">{isFull ? 'Join the waitlist' : 'Apply for a slot'}</div>
-                    
-                    {applyMessage && (
-                      <div className={`msg-banner ${applyMessage.type === 'success' ? 'ok show' : 'error show'} mb-3`}>
-                        {applyMessage.text}
+                    <div className="form-field">
+                      {/* Spacer */}
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Team Size (incl. you)</label>
+                      <input
+                        type="number"
+                        name="slots_needed"
+                        min={2}
+                        max={20}
+                        value={editSlotsNeeded}
+                        onChange={(e) => setEditSlotsNeeded(parseInt(e.target.value, 10))}
+                        required
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Review Window (days)</label>
+                      <input
+                        type="number"
+                        name="review_days"
+                        min={1}
+                        max={14}
+                        value={editReviewDays}
+                        onChange={(e) => setEditReviewDays(parseInt(e.target.value, 10))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-field" style={{ position: 'relative' }}>
+                    <label className="flex justify-between w-full">
+                      <span>Keywords (search & select)</span>
+                      <span className="text-[10px] text-[#c68227]">{editKeywords.length}/10 selected</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editKeywordSearch}
+                      onChange={handleEditKeywordSearchChange}
+                      placeholder="Type to search and add keywords..."
+                      autoComplete="off"
+                    />
+                    {showEditSuggestionsDropdown && editSuggestions.length > 0 && (
+                      <div className="kw-dropdown show">
+                        {editSuggestions.map((kw) => (
+                          <div
+                            key={kw}
+                            className="kw-dropdown-item font-mono"
+                            onClick={() => handleSelectEditKeyword(kw)}
+                          >
+                            {kw}
+                          </div>
+                        ))}
                       </div>
                     )}
-
-                    <form onSubmit={handleApplySubmit} className="apply-form">
-                      <div className="form-row">
-                        <div className="form-field">
-                          <label>Name</label>
-                          <input type="text" required value={applyName} onChange={(e) => setApplyName(e.target.value)} placeholder="e.g. Rahul P." />
-                        </div>
-                        <div className="form-field">
-                          <label>Semester</label>
-                          <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="e.g. Sem 5" />
-                        </div>
-                      </div>
-                      <div className="form-row">
-                        <div className="form-field">
-                          <label>Department</label>
-                          <select value={applyDept} onChange={(e) => setApplyDept(e.target.value)}>
-                            <option value="ECE">ECE</option>
-                            <option value="CSE">CSE</option>
-                            <option value="CE">CE</option>
-                            <option value="ME">ME</option>
-                            <option value="CHE">CHE</option>
-                            <option value="FT">FT</option>
-                            <option value="EV">EV</option>
-                            <option value="ECS">ECS</option>
-                            <option value="RB">RB</option>
-                          </select>
-                        </div>
-                        <div className="form-field">
-                          <label>LinkedIn URL</label>
-                          <input type="text" required value={applyLinkedin} onChange={(e) => setApplyLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/rahul-p" />
-                        </div>
-                      </div>
-                      <div className="helper italic">
-                        Once submitted, your slot status is confirmed instantly based on the current pool size.
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={submittingApply}
-                        className={`btn btn-block ${isFull ? 'btn-outline border-[#0f2a47] text-[#0f2a47]' : 'btn-solid bg-[#0f2a47] text-white'}`}
-                      >
-                        {submittingApply ? 'Processing...' : isFull ? 'Join Waitlist' : 'Reserve My Slot'}
-                      </button>
-                    </form>
                   </div>
-                );
-              })()}
+                  {editKeywords.length > 0 && (
+                    <div className="selected-kws-container">
+                      {editKeywords.map((kw) => (
+                        <div key={kw} className="selected-kw-tag">
+                          <span>{kw}</span>
+                          <button type="button" onClick={() => handleRemoveEditKeyword(kw)}>
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Creator verification email field */}
+                  <div className="form-field mt-4 border-t border-dashed border-[#c9d6d1] pt-4">
+                    <label className="text-[#c1502e] font-bold">Creator Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={creatorEmail}
+                      onChange={(e) => setCreatorEmail(e.target.value)}
+                      placeholder="Enter the email used to create this call to authorize edits"
+                      autoComplete="off"
+                      className="border-red-300 focus:border-red-500"
+                    />
+                    <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
+                      Changes will only be saved if this matches the original project call email.
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-4">
+                    <button type="submit" disabled={submittingApply} className="btn btn-solid flex-1 bg-[#0f2a47] text-white">
+                      {submittingApply ? 'Saving changes...' : 'Save Changes'}
+                    </button>
+                    <button type="button" onClick={cancelCreatorAction} className="btn btn-outline">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : isDeletingProject ? (
+                /* DELETE CONFIRMATION VIEW */
+                <form onSubmit={handleDeleteConfirm} className="apply-form">
+                  {applyMessage && (
+                    <div className={`msg-banner ${applyMessage.type === 'success' ? 'ok show' : 'error show'} mb-3`}>
+                      {applyMessage.text}
+                    </div>
+                  )}
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-sm text-sm text-[#c1502e] mb-4">
+                    <strong>⚠️ WARNING:</strong> You are about to permanently delete the project call <strong>"{selectedProject.title}"</strong>. This will delete all candidate bookings and waitlists. This action cannot be undone.
+                  </div>
+
+                  <div className="form-field">
+                    <label className="text-[#c1502e] font-bold">Creator Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={creatorEmail}
+                      onChange={(e) => setCreatorEmail(e.target.value)}
+                      placeholder="Enter the email used to create this call to authorize deletion"
+                      autoComplete="off"
+                      className="border-red-300 focus:border-red-500"
+                    />
+                    <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
+                      Deletion will only proceed if this matches the original project call email.
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-4">
+                    <button type="submit" disabled={submittingApply} className="btn btn-solid flex-1" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)', color: 'white' }}>
+                      {submittingApply ? 'Deleting...' : 'Permanently Delete'}
+                    </button>
+                    <button type="button" onClick={cancelCreatorAction} className="btn btn-outline">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* REGULAR DETAILED VIEW */
+                <>
+                  {/* Creator Actions Bar */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '14px', borderBottom: '1px dashed var(--paper-line)', paddingBottom: '10px' }}>
+                    <button onClick={startEditing} className="btn btn-outline btn-sm font-semibold flex items-center gap-1">
+                      ✏️ Edit Call
+                    </button>
+                    <button onClick={startDeleting} className="btn btn-outline btn-sm font-semibold" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+                      🗑️ Delete Call
+                    </button>
+                  </div>
+
+                  <div>
+                    <div className="modal-section-label">Abstract</div>
+                    <p>{selectedProject.abstract}</p>
+                  </div>
+
+                  <div style={{ background: 'var(--paper)', border: '1px solid var(--paper-line)', padding: '12px 16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                    <div>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '2px' }}>Project Called By</span>
+                      <strong style={{ fontSize: '15px', color: 'var(--blue-deep)' }}>{selectedProject.caller_name}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--blue-mid)', fontWeight: 'bold' }}>PROJECT CREATOR</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="modal-section-label">Review Window</div>
+                    {(() => {
+                      const apps = selectedProject.applicants || [];
+                      const confirmedCount = apps.filter(a => a.status === 'confirmed').length;
+                      const daysLeft = getDaysLeft(selectedProject.expires_at);
+                      const pct = Math.max(4, Math.round((daysLeft / selectedProject.review_days) * 100));
+                      
+                      return (
+                        <div className="gauge-wrap">
+                          <div className="gauge-label font-bold">
+                            <span>{confirmedCount}/{selectedProject.slots_needed} slots filled</span>
+                            <span>{daysLeft <= 0 ? 'closes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}</span>
+                          </div>
+                          <div className="gauge mt-1">
+                            <div
+                              className={`gauge-fill ${getGaugeClass(daysLeft, selectedProject.review_days)}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                            <div className="gauge-ticks" />
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div>
+                    <div className="modal-section-label">Current Applicant Pool ({(selectedProject.applicants || []).length})</div>
+                    <div className="applicant-list">
+                      {(selectedProject.applicants || []).length === 0 ? (
+                        <div className="helper italic text-center p-3 border border-dashed border-[#c9d6d1] bg-[var(--paper)]">
+                          No applicants yet — be the first to apply.
+                        </div>
+                      ) : (
+                        (selectedProject.applicants || []).map((app, index) => (
+                          <div key={index} className={`applicant ${app.status === 'waitlist' ? 'waitlist' : ''}`}>
+                            <span>{app.name} &middot; {app.dept_sem}</span>
+                            <span className="flex items-center gap-2">
+                              <a href={app.linkedin_url.startsWith('http') ? app.linkedin_url : `https://${app.linkedin_url}`} target="_blank" rel="noopener noreferrer">
+                                LinkedIn
+                              </a>
+                              <span className={`status-pill ${app.status === 'confirmed' ? 'main' : 'wait'}`}>
+                                {app.status === 'confirmed' ? 'confirmed' : 'waitlist'}
+                              </span>
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Join project form */}
+                  {(() => {
+                    const apps = selectedProject.applicants || [];
+                    const confirmedCount = apps.filter(a => a.status === 'confirmed').length;
+                    const totalCount = apps.length;
+                    const isFull = confirmedCount >= selectedProject.slots_needed;
+                    const isBufferLimit = totalCount >= (selectedProject.slots_needed * 2);
+
+                    if (isBufferLimit) {
+                      return (
+                        <div className="border-t border-[#c9d6d1] pt-4">
+                          <div className="modal-section-label">Apply for a slot</div>
+                          <div className="p-3.5 bg-red-50 text-[#c1502e] border border-[#c1502e] rounded-sm text-xs font-semibold text-center">
+                            This project matches oversubscription limits. The waitlist buffer is completely full.
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="border-t border-dashed border-[#c9d6d1] pt-4">
+                        <div className="modal-section-label">{isFull ? 'Join the waitlist' : 'Apply for a slot'}</div>
+                        
+                        {applyMessage && (
+                          <div className={`msg-banner ${applyMessage.type === 'success' ? 'ok show' : 'error show'} mb-3`}>
+                            {applyMessage.text}
+                          </div>
+                        )}
+
+                        <form onSubmit={handleApplySubmit} className="apply-form">
+                          <div className="form-row">
+                            <div className="form-field">
+                              <label>Name</label>
+                              <input type="text" required value={applyName} onChange={(e) => setApplyName(e.target.value)} placeholder="e.g. Rahul P." />
+                            </div>
+                            <div className="form-field">
+                              <label>Semester</label>
+                              <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="e.g. Sem 5" />
+                            </div>
+                          </div>
+                          <div className="form-row">
+                            <div className="form-field">
+                              <label>Department</label>
+                              <select value={applyDept} onChange={(e) => setApplyDept(e.target.value)}>
+                                <option value="ECE">ECE</option>
+                                <option value="CSE">CSE</option>
+                                <option value="CE">CE</option>
+                                <option value="ME">ME</option>
+                                <option value="CHE">CHE</option>
+                                <option value="FT">FT</option>
+                                <option value="EV">EV</option>
+                                <option value="ECS">ECS</option>
+                                <option value="RB">RB</option>
+                              </select>
+                            </div>
+                            <div className="form-field">
+                              <label>LinkedIn URL</label>
+                              <input type="text" required value={applyLinkedin} onChange={(e) => setApplyLinkedin(e.target.value)} placeholder="e.g. linkedin.com/in/rahul-p" />
+                            </div>
+                          </div>
+                          <div className="helper italic">
+                            Once submitted, your slot status is confirmed instantly based on the current pool size.
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={submittingApply}
+                            className={`btn btn-block ${isFull ? 'btn-outline border-[#0f2a47] text-[#0f2a47]' : 'btn-solid bg-[#0f2a47] text-white'}`}
+                          >
+                            {submittingApply ? 'Processing...' : isFull ? 'Join Waitlist' : 'Reserve My Slot'}
+                          </button>
+                        </form>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
           </div>
         </div>
