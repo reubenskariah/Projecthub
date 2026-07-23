@@ -7,9 +7,10 @@ import { createProjectCall } from '@/app/actions/projectActions';
 interface ProjectFormProps {
   onSuccess?: () => void;
   onClose?: () => void;
+  initialEmail?: string;
 }
 
-export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
+export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: ProjectFormProps) {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [keywordSearch, setKeywordSearch] = useState('');
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
@@ -138,6 +139,7 @@ export default function ProjectForm({ onSuccess, onClose }: ProjectFormProps) {
                 type="email"
                 name="caller_email"
                 required
+                defaultValue={initialEmail}
                 placeholder="e.g. aditya@college.edu"
                 autoComplete="off"
               />

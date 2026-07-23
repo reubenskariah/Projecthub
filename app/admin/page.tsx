@@ -28,6 +28,7 @@ interface Project {
   abstract: string;
   caller_name: string;
   caller_dept: string;
+  caller_email: string;
   slots_needed: number;
   review_days: number;
   expires_at: string;

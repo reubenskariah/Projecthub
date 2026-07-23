@@ -21,6 +21,7 @@ interface Project {
   abstract: string;
   caller_name: string;
   caller_dept: string;
+  caller_email: string;
   slots_needed: number;
   review_days: number;
   expires_at: string;
@@ -75,6 +76,11 @@ export default function HomePage() {
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatorEmail, setCreatorEmail] = useState('');
+
+  // User session/login states
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginEmailInput, setLoginEmailInput] = useState('');
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
 
   // Edit form states (mirroring ProjectForm fields but populated from selectedProject)
   const [editTitle, setEditTitle] = useState('');
@@ -137,6 +143,16 @@ export default function HomePage() {
       loadMentors();
     }
   }, [activeTab]);
+
+  // Load logged in email from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('ph_logged_in_email');
+      if (email) {
+        setLoggedInEmail(email);
+      }
+    }
+  }, []);
 
 
   // Particle background canvas setup
@@ -410,14 +426,14 @@ export default function HomePage() {
     setEditSlotsNeeded(selectedProject.slots_needed);
     setEditReviewDays(selectedProject.review_days);
     setEditKeywords(selectedProject.keywords || []);
-    setCreatorEmail('');
+    setCreatorEmail(loggedInEmail || '');
     setApplyMessage(null);
     setIsEditingProject(true);
     setIsDeletingProject(false);
   };
 
   const startDeleting = () => {
-    setCreatorEmail('');
+    setCreatorEmail(loggedInEmail || '');
     setApplyMessage(null);
     setIsDeletingProject(true);
     setIsEditingProject(false);
@@ -428,6 +444,29 @@ export default function HomePage() {
     setIsDeletingProject(false);
     setCreatorEmail('');
     setApplyMessage(null);
+  };
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmailInput.trim()) return;
+
+    // Strict regex email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(loginEmailInput.trim())) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    const email = loginEmailInput.trim().toLowerCase();
+    localStorage.setItem('ph_logged_in_email', email);
+    setLoggedInEmail(email);
+    setIsLoginModalOpen(false);
+    setLoginEmailInput('');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ph_logged_in_email');
+    setLoggedInEmail(null);
   };
 
   const handleEditKeywordSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -575,7 +614,54 @@ export default function HomePage() {
               Mentors
             </button>
           </nav>
-          <nav className="top-actions">
+          <nav className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {loggedInEmail ? (
+              <div 
+                className="user-badge" 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  background: 'rgba(255, 255, 255, 0.1)', 
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  padding: '6px 12px', 
+                  borderRadius: 'var(--radius)',
+                  fontSize: '12px',
+                  fontFamily: 'var(--mono)'
+                }}
+              >
+                <span style={{ color: 'var(--cyan-line)' }}>👤</span>
+                <span style={{ color: 'var(--white)', fontWeight: 600 }} title={loggedInEmail}>
+                  {loggedInEmail.length > 20 ? loggedInEmail.substring(0, 18) + '...' : loggedInEmail}
+                </span>
+                <button 
+                  onClick={handleLogout} 
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'var(--danger)', 
+                    cursor: 'pointer', 
+                    padding: '0 2px',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    marginLeft: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}
+                  title="Sign Out"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="btn btn-ghost cursor-pointer" 
+                onClick={() => setIsLoginModalOpen(true)}
+                style={{ padding: '8px 14px', fontSize: '12.5px' }}
+              >
+                Sign In
+              </button>
+            )}
             <button className="btn btn-amber cursor-pointer" onClick={() => setIsPostModalOpen(true)}>
               + Call for a project
             </button>
@@ -879,6 +965,7 @@ export default function HomePage() {
         <div className="overlay show" style={{ display: 'flex' }}>
           <div className="modal max-w-2xl w-full m-auto">
             <ProjectForm
+              initialEmail={loggedInEmail || ''}
               onSuccess={() => {
                 // Reload feed (though it'll be pending, so it won't appear immediately, which is correct)
                 loadProjects(selectedKeyword || undefined);
@@ -962,6 +1049,51 @@ export default function HomePage() {
                 </div>
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2.5: Sign In Modal */}
+      {isLoginModalOpen && (
+        <div className="overlay show" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) setIsLoginModalOpen(false); }}>
+          <div className="modal max-w-[450px] m-auto">
+            <div className="modal-head">
+              <div>
+                <div className="card-dept">Authentication</div>
+                <h2>Sign In as Project Caller</h2>
+              </div>
+              <button className="modal-close cursor-pointer" onClick={() => setIsLoginModalOpen(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <p style={{ fontSize: '13.5px', lineHeight: 1.5, color: 'var(--ink-soft)' }}>
+                Enter the email address you use (or plan to use) for project calls to authorize editing and deletion of your listings.
+              </p>
+              
+              <form onSubmit={handleLoginSubmit} className="apply-form">
+                <div className="form-field">
+                  <label className="font-bold text-[#0f2a47]">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={loginEmailInput}
+                    onChange={(e) => setLoginEmailInput(e.target.value)}
+                    placeholder="e.g. aditya@gmail.com"
+                    autoComplete="off"
+                    className="border border-[#c9d6d1] p-2 focus:border-[#e8a33d] focus:outline-none"
+                  />
+                </div>
+                
+                <div className="flex gap-3 mt-2">
+                  <button type="submit" className="btn btn-solid flex-1 bg-[#0f2a47] text-white">
+                    Sign In
+                  </button>
+                  <button type="button" onClick={() => setIsLoginModalOpen(false)} className="btn btn-outline">
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -1105,7 +1237,8 @@ export default function HomePage() {
                       onChange={(e) => setCreatorEmail(e.target.value)}
                       placeholder="Enter the email used to create this call to authorize edits"
                       autoComplete="off"
-                      className="border-red-300 focus:border-red-500"
+                      className="border-red-300 focus:border-red-500 bg-[#f7faf8]"
+                      disabled={!!loggedInEmail}
                     />
                     <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
                       Changes will only be saved if this matches the original project call email.
@@ -1142,7 +1275,8 @@ export default function HomePage() {
                       onChange={(e) => setCreatorEmail(e.target.value)}
                       placeholder="Enter the email used to create this call to authorize deletion"
                       autoComplete="off"
-                      className="border-red-300 focus:border-red-500"
+                      className="border-red-300 focus:border-red-500 bg-[#f7faf8]"
+                      disabled={!!loggedInEmail}
                     />
                     <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
                       Deletion will only proceed if this matches the original project call email.
@@ -1161,15 +1295,17 @@ export default function HomePage() {
               ) : (
                 /* REGULAR DETAILED VIEW */
                 <>
-                  {/* Creator Actions Bar */}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '14px', borderBottom: '1px dashed var(--paper-line)', paddingBottom: '10px' }}>
-                    <button onClick={startEditing} className="btn btn-outline btn-sm font-semibold flex items-center gap-1">
-                      ✏️ Edit Call
-                    </button>
-                    <button onClick={startDeleting} className="btn btn-outline btn-sm font-semibold" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
-                      🗑️ Delete Call
-                    </button>
-                  </div>
+                  {/* Creator Actions Bar - Only visible to logged-in project caller */}
+                  {loggedInEmail && selectedProject.caller_email && loggedInEmail.toLowerCase().trim() === selectedProject.caller_email.toLowerCase().trim() && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '14px', borderBottom: '1px dashed var(--paper-line)', paddingBottom: '10px' }}>
+                      <button onClick={startEditing} className="btn btn-outline btn-sm font-semibold flex items-center gap-1">
+                        ✏️ Edit Call
+                      </button>
+                      <button onClick={startDeleting} className="btn btn-outline btn-sm font-semibold" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+                        🗑️ Delete Call
+                      </button>
+                    </div>
+                  )}
 
                   <div>
                     <div className="modal-section-label">Abstract</div>
