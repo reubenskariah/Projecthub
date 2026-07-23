@@ -78,6 +78,7 @@ export default function HomePage() {
   const [creatorEmail, setCreatorEmail] = useState('');
   const [creatorPasskey, setCreatorPasskey] = useState('');
   const [wrongAttempts, setWrongAttempts] = useState<number>(0);
+  const [showAdminFooter, setShowAdminFooter] = useState(false);
 
   // User session/login states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -166,6 +167,31 @@ export default function HomePage() {
       setCreatorPasskey('');
     }
   }, [selectedProject]);
+
+  // Detect when user has scrolled to the bottom of the page
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+      // Triggers popup within 45px of the very bottom, or if page is shorter than screen
+      const isAtBottom = (windowHeight + scrollY >= documentHeight - 45) || (documentHeight <= windowHeight);
+      setShowAdminFooter(isAtBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    const resizeObserver = new ResizeObserver(handleScroll);
+    if (typeof document !== 'undefined' && document.body) {
+      resizeObserver.observe(document.body);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [activeTab, projects, mentors]);
 
 
   // Particle background canvas setup
@@ -1539,7 +1565,7 @@ export default function HomePage() {
           position: 'fixed',
           bottom: '12px',
           right: '16px',
-          background: 'rgba(238, 242, 238, 0.85)',
+          background: 'rgba(238, 242, 238, 0.95)',
           backdropFilter: 'blur(8px)',
           border: '1.5px solid var(--blue-deep)',
           padding: '8px 14px',
@@ -1552,7 +1578,10 @@ export default function HomePage() {
           display: 'flex',
           flexDirection: 'column',
           gap: '2px',
-          pointerEvents: 'auto'
+          opacity: showAdminFooter ? 1 : 0,
+          transform: showAdminFooter ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
+          pointerEvents: showAdminFooter ? 'auto' : 'none',
+          transition: 'opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--paper-line)', paddingBottom: '3px', marginBottom: '3px', color: 'var(--amber-dim)' }}>
