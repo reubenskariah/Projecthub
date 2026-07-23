@@ -57,10 +57,11 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     const caller_name = formData.get('caller_name') as string;
     const caller_dept = formData.get('caller_dept') as string;
     const caller_email = formData.get('caller_email') as string;
+    const passkey = formData.get('passkey') as string;
     const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
     const review_days = parseInt(formData.get('review_days') as string, 10);
 
-    if (!title || !abstract || !caller_name || !caller_dept || !caller_email || isNaN(slots_needed) || isNaN(review_days)) {
+    if (!title || !abstract || !caller_name || !caller_dept || !caller_email || !passkey || isNaN(slots_needed) || isNaN(review_days)) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
@@ -81,6 +82,12 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
       return { success: false, error: 'Please enter a valid email address (e.g. name@college.edu).' };
     }
 
+    // Passkey validation
+    const passkeyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\/;`~|]).{8}$/;
+    if (!passkeyRegex.test(passkey)) {
+      return { success: false, error: 'Passkey must be exactly 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.' };
+    }
+
     // Escape HTML tags to prevent Cross-Site Scripting (XSS)
     const escapedTitle = escapeHtml(title);
     const escapedAbstract = escapeHtml(abstract);
@@ -99,6 +106,7 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
         caller_name: escapedCallerName,
         caller_dept,
         caller_email: caller_email.trim(),
+        passkey: passkey.trim(),
         slots_needed,
         review_days,
         expires_at: expiresAt.toISOString(),
@@ -522,6 +530,7 @@ export async function deleteMentor(mentorId: string, adminPass: string) {
 export async function updateProjectAsCreator(
   projectId: string,
   callerEmail: string,
+  passkey: string,
   formData: FormData,
   selectedKeywords: string[]
 ) {
@@ -533,7 +542,7 @@ export async function updateProjectAsCreator(
     const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
     const review_days = parseInt(formData.get('review_days') as string, 10);
 
-    if (!title || !abstract || !caller_dept || isNaN(slots_needed) || isNaN(review_days) || !callerEmail) {
+    if (!title || !abstract || !caller_dept || isNaN(slots_needed) || isNaN(review_days) || !callerEmail || !passkey) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
@@ -545,10 +554,10 @@ export async function updateProjectAsCreator(
       return { success: false, error: 'Project abstract exceeds maximum length of 5000 characters.' };
     }
 
-    // Fetch the project to verify caller email
+    // Fetch the project to verify caller email and passkey
     const { data: project, error: fetchError } = await supabase
       .from('projects')
-      .select('caller_email, status')
+      .select('caller_email, passkey, status')
       .eq('id', projectId)
       .single();
 
@@ -558,6 +567,10 @@ export async function updateProjectAsCreator(
 
     if (project.caller_email.toLowerCase().trim() !== callerEmail.toLowerCase().trim()) {
       return { success: false, error: 'Unauthorized: The provided email does not match the project creator\'s email.' };
+    }
+
+    if (project.passkey && project.passkey.trim() !== passkey.trim()) {
+      return { success: false, error: 'Unauthorized: Invalid passkey.' };
     }
 
     // Escape HTML tags to prevent XSS
@@ -598,16 +611,16 @@ export async function updateProjectAsCreator(
 /**
  * Deletes a project call by the creator, verifying the creator's email address.
  */
-export async function deleteProjectAsCreator(projectId: string, callerEmail: string) {
+export async function deleteProjectAsCreator(projectId: string, callerEmail: string, passkey: string) {
   if (!isDbConfigured()) return ENV_ERROR;
-  if (!callerEmail) {
-    return { success: false, error: 'Email is required to delete the project.' };
+  if (!callerEmail || !passkey) {
+    return { success: false, error: 'Email and passkey are required to delete the project.' };
   }
   try {
-    // Fetch the project to verify caller email
+    // Fetch the project to verify caller email and passkey
     const { data: project, error: fetchError } = await supabase
       .from('projects')
-      .select('caller_email')
+      .select('caller_email, passkey')
       .eq('id', projectId)
       .single();
 
@@ -617,6 +630,10 @@ export async function deleteProjectAsCreator(projectId: string, callerEmail: str
 
     if (project.caller_email.toLowerCase().trim() !== callerEmail.toLowerCase().trim()) {
       return { success: false, error: 'Unauthorized: The provided email does not match the project creator\'s email.' };
+    }
+
+    if (project.passkey && project.passkey.trim() !== passkey.trim()) {
+      return { success: false, error: 'Unauthorized: Invalid passkey.' };
     }
 
     // Delete associated applicant bookings first

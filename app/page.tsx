@@ -76,6 +76,8 @@ export default function HomePage() {
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [creatorEmail, setCreatorEmail] = useState('');
+  const [creatorPasskey, setCreatorPasskey] = useState('');
+  const [wrongAttempts, setWrongAttempts] = useState<number>(0);
 
   // User session/login states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -153,6 +155,17 @@ export default function HomePage() {
       }
     }
   }, []);
+
+  // Track wrong attempts when selectedProject changes
+  useEffect(() => {
+    if (selectedProject) {
+      const attempts = localStorage.getItem(`ph_wrong_attempts_${selectedProject.id}`);
+      setWrongAttempts(attempts ? parseInt(attempts, 10) : 0);
+    } else {
+      setWrongAttempts(0);
+      setCreatorPasskey('');
+    }
+  }, [selectedProject]);
 
 
   // Particle background canvas setup
@@ -443,6 +456,7 @@ export default function HomePage() {
     setIsEditingProject(false);
     setIsDeletingProject(false);
     setCreatorEmail('');
+    setCreatorPasskey('');
     setApplyMessage(null);
   };
 
@@ -503,15 +517,21 @@ export default function HomePage() {
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedProject) return;
+    if (wrongAttempts >= 5) {
+      setApplyMessage({ type: 'error', text: 'Action blocked. Too many incorrect passkey attempts. Please contact the administrator.' });
+      return;
+    }
     setSubmittingApply(true);
     setApplyMessage(null);
 
     const formData = new FormData(e.currentTarget);
-    const res = await updateProjectAsCreator(selectedProject.id, creatorEmail, formData, editKeywords);
+    const res = await updateProjectAsCreator(selectedProject.id, creatorEmail, creatorPasskey, formData, editKeywords);
     
     if (res.success) {
       setApplyMessage({ type: 'success', text: 'Project call successfully updated!' });
       setIsEditingProject(false);
+      setWrongAttempts(0);
+      localStorage.removeItem(`ph_wrong_attempts_${selectedProject.id}`);
       
       // Reload projects
       const updated = await fetchActiveProjects(selectedKeyword || undefined);
@@ -526,7 +546,18 @@ export default function HomePage() {
         }
       }
     } else {
-      setApplyMessage({ type: 'error', text: res.error || 'Failed to update project.' });
+      if (res.error && res.error.toLowerCase().includes('passkey')) {
+        const nextAttempts = wrongAttempts + 1;
+        setWrongAttempts(nextAttempts);
+        localStorage.setItem(`ph_wrong_attempts_${selectedProject.id}`, nextAttempts.toString());
+        if (nextAttempts >= 5) {
+          setApplyMessage({ type: 'error', text: 'You have entered the wrong passkey 5 times. Please contact the administrator. Admin details are available at the bottom of the page.' });
+        } else {
+          setApplyMessage({ type: 'error', text: `${res.error} (Attempt ${nextAttempts}/5)` });
+        }
+      } else {
+        setApplyMessage({ type: 'error', text: res.error || 'Failed to update project.' });
+      }
     }
     setSubmittingApply(false);
   };
@@ -534,18 +565,34 @@ export default function HomePage() {
   const handleDeleteConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
+    if (wrongAttempts >= 5) {
+      setApplyMessage({ type: 'error', text: 'Action blocked. Too many incorrect passkey attempts. Please contact the administrator.' });
+      return;
+    }
     setSubmittingApply(true);
     setApplyMessage(null);
 
-    const res = await deleteProjectAsCreator(selectedProject.id, creatorEmail);
+    const res = await deleteProjectAsCreator(selectedProject.id, creatorEmail, creatorPasskey);
     if (res.success) {
       alert('Project call deleted successfully.');
       setIsDeletingProject(false);
       setSelectedProject(null);
+      localStorage.removeItem(`ph_wrong_attempts_${selectedProject.id}`);
       // Reload projects
       loadProjects(selectedKeyword || undefined);
     } else {
-      setApplyMessage({ type: 'error', text: res.error || 'Failed to delete project.' });
+      if (res.error && res.error.toLowerCase().includes('passkey')) {
+        const nextAttempts = wrongAttempts + 1;
+        setWrongAttempts(nextAttempts);
+        localStorage.setItem(`ph_wrong_attempts_${selectedProject.id}`, nextAttempts.toString());
+        if (nextAttempts >= 5) {
+          setApplyMessage({ type: 'error', text: 'You have entered the wrong passkey 5 times. Please contact the administrator. Admin details are available at the bottom of the page.' });
+        } else {
+          setApplyMessage({ type: 'error', text: `${res.error} (Attempt ${nextAttempts}/5)` });
+        }
+      } else {
+        setApplyMessage({ type: 'error', text: res.error || 'Failed to delete project.' });
+      }
     }
     setSubmittingApply(false);
   };
@@ -1227,7 +1274,7 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Creator verification email field */}
+                  {/* Creator verification email and passkey fields */}
                   <div className="form-field mt-4 border-t border-dashed border-[#c9d6d1] pt-4">
                     <label className="text-[#c1502e] font-bold">Creator Email Address</label>
                     <input
@@ -1240,13 +1287,29 @@ export default function HomePage() {
                       className="border-red-300 focus:border-red-500 bg-[#f7faf8]"
                       disabled={!!loggedInEmail}
                     />
+                  </div>
+
+                  <div className="form-field mt-3">
+                    <label className="text-[#c1502e] font-bold">Secret Passkey</label>
+                    <input
+                      type="password"
+                      required
+                      value={creatorPasskey}
+                      onChange={(e) => setCreatorPasskey(e.target.value)}
+                      placeholder="Enter the 8-character secret passkey"
+                      autoComplete="off"
+                      className="border-red-300 focus:border-red-500"
+                      maxLength={8}
+                      minLength={8}
+                      disabled={wrongAttempts >= 5}
+                    />
                     <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
-                      Changes will only be saved if this matches the original project call email.
+                      Changes will only be saved if the email and passkey match the original project call.
                     </div>
                   </div>
 
                   <div className="flex gap-3 mt-4">
-                    <button type="submit" disabled={submittingApply} className="btn btn-solid flex-1 bg-[#0f2a47] text-white">
+                    <button type="submit" disabled={submittingApply || wrongAttempts >= 5} className="btn btn-solid flex-1 bg-[#0f2a47] text-white">
                       {submittingApply ? 'Saving changes...' : 'Save Changes'}
                     </button>
                     <button type="button" onClick={cancelCreatorAction} className="btn btn-outline">
@@ -1278,13 +1341,29 @@ export default function HomePage() {
                       className="border-red-300 focus:border-red-500 bg-[#f7faf8]"
                       disabled={!!loggedInEmail}
                     />
+                  </div>
+
+                  <div className="form-field mt-3">
+                    <label className="text-[#c1502e] font-bold">Secret Passkey</label>
+                    <input
+                      type="password"
+                      required
+                      value={creatorPasskey}
+                      onChange={(e) => setCreatorPasskey(e.target.value)}
+                      placeholder="Enter the 8-character secret passkey"
+                      autoComplete="off"
+                      className="border-red-300 focus:border-red-500"
+                      maxLength={8}
+                      minLength={8}
+                      disabled={wrongAttempts >= 5}
+                    />
                     <div className="helper italic text-[#c1502e] mt-1" style={{ fontSize: '11.5px' }}>
-                      Deletion will only proceed if this matches the original project call email.
+                      Deletion will only proceed if the email and passkey match the original project call.
                     </div>
                   </div>
 
                   <div className="flex gap-3 mt-4">
-                    <button type="submit" disabled={submittingApply} className="btn btn-solid flex-1" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)', color: 'white' }}>
+                    <button type="submit" disabled={submittingApply || wrongAttempts >= 5} className="btn btn-solid flex-1" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)', color: 'white' }}>
                       {submittingApply ? 'Deleting...' : 'Permanently Delete'}
                     </button>
                     <button type="button" onClick={cancelCreatorAction} className="btn btn-outline">
@@ -1453,6 +1532,36 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Admin Contact Info Footer */}
+      <footer 
+        style={{
+          position: 'fixed',
+          bottom: '12px',
+          right: '16px',
+          background: 'rgba(238, 242, 238, 0.85)',
+          backdropFilter: 'blur(8px)',
+          border: '1.5px solid var(--blue-deep)',
+          padding: '8px 14px',
+          borderRadius: 'var(--radius)',
+          boxShadow: '3px 3px 0 rgba(15, 42, 71, 0.15)',
+          fontSize: '11px',
+          fontFamily: 'var(--mono)',
+          color: 'var(--blue-deep)',
+          zIndex: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px',
+          pointerEvents: 'auto'
+        }}
+      >
+        <div style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--paper-line)', paddingBottom: '3px', marginBottom: '3px', color: 'var(--amber-dim)' }}>
+          ⚙️ Admin Contacts
+        </div>
+        <div>JESWIN: <a href="tel:+918281279456" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 82812 79456</a></div>
+        <div>REUBEN: <a href="tel:+919539375601" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 9539375601</a></div>
+        <div>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 73065 60178</a></div>
+      </footer>
     </>
   );
 }

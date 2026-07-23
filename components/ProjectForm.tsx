@@ -61,6 +61,18 @@ export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: P
 
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const passkey = formData.get('passkey') as string;
+
+    // Validate passkey strength: exactly 8 chars, must include upper, lower, number, special char
+    const passkeyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\/;`~|]).{8}$/;
+    if (!passkeyRegex.test(passkey)) {
+      setMessage({
+        type: 'error',
+        text: 'Passkey must be exactly 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const res = await createProjectCall(formData, selectedKeywords);
@@ -162,7 +174,16 @@ export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: P
               </select>
             </div>
             <div className="form-field">
-              {/* Spacer for 2-column alignment layout balance */}
+              <label>Secret Passkey (Exactly 8 chars)</label>
+              <input
+                type="password"
+                name="passkey"
+                required
+                maxLength={8}
+                minLength={8}
+                placeholder="e.g. Abc@1234"
+                autoComplete="off"
+              />
             </div>
           </div>
 
@@ -254,7 +275,7 @@ export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: P
           )}
 
           <div className="helper">
-            New calls enter a review queue and appear on the feed once an organizer approves them — this keeps the directory spam-free.
+            New calls enter a review queue and appear on the feed once approved. The Secret Passkey must be exactly 8 characters containing an uppercase letter, a lowercase letter, a number, and a special character.
           </div>
 
           <button
