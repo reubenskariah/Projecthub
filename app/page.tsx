@@ -1561,35 +1561,24 @@ export default function HomePage() {
 
       {/* Admin Contact Info Footer */}
       <footer 
+        className="admin-cloud-footer"
         style={{
-          position: 'fixed',
-          bottom: '12px',
-          right: '16px',
-          background: 'rgba(238, 242, 238, 0.95)',
-          backdropFilter: 'blur(8px)',
-          border: '1.5px solid var(--blue-deep)',
-          padding: '8px 14px',
-          borderRadius: 'var(--radius)',
-          boxShadow: '3px 3px 0 rgba(15, 42, 71, 0.15)',
-          fontSize: '11px',
-          fontFamily: 'var(--mono)',
-          color: 'var(--blue-deep)',
-          zIndex: 30,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2px',
           opacity: showAdminFooter ? 1 : 0,
           transform: showAdminFooter ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
           pointerEvents: showAdminFooter ? 'auto' : 'none',
           transition: 'opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--paper-line)', paddingBottom: '3px', marginBottom: '3px', color: 'var(--amber-dim)' }}>
-          ⚙️ Admin Contacts
+        <div className="cloud-puff-left" />
+        <div className="cloud-puff-right" />
+        <div className="cloud-body">
+          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--paper-line)', paddingBottom: '3px', marginBottom: '3px', color: 'var(--amber-dim)' }}>
+            ⚙️ Admin Contacts
+          </div>
+          <div>JESWIN: <a href="tel:+918281279456" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 82812 79456</a></div>
+          <div>REUBEN: <a href="tel:+919539375601" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 9539375601</a></div>
+          <div>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 73065 60178</a></div>
         </div>
-        <div>JESWIN: <a href="tel:+918281279456" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 82812 79456</a></div>
-        <div>REUBEN: <a href="tel:+919539375601" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 9539375601</a></div>
-        <div>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 73065 60178</a></div>
       </footer>
     </>
   );
