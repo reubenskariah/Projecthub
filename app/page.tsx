@@ -976,7 +976,7 @@ export default function HomePage() {
                 </div>
                 <div className="meta-row">
                   <span>Departments</span>
-                  <span>4 (CSE, ECE, IT, Civil)</span>
+                  <span>{new Set(mentors.map(m => m.dept).filter(Boolean)).size}</span>
                 </div>
                 <div className="meta-row" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                   <span>Availability</span>
