@@ -1044,9 +1044,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Create and Submit a Project Call</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>1. Create &amp; Secure Project Call</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Click the "+ Call for a project" button. Enter your name, lead department, title, abstract, and mail id. Select up to 10 keyword tags and set a review window from 1 to 14 days.
+                    Click the "+ Call for a project" button. Enter your details and email. Enforce access security by setting a robust <strong>8-character Secret Passkey</strong> (which must contain a capital letter, lowercase letter, number, and special character). Select tags and set a review window of 1 to 14 days.
                   </p>
                 </div>
               </div>
@@ -1059,9 +1059,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Spam Verification & Live Feed</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>2. Sign In &amp; Session Persistence</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    To maintain directory quality, new project calls enter a review queue. Once approved by an administrator, your listing immediately goes live and appears at the top of the page feed.
+                    Sign In at the top-right using your email address, which persists your session in your browser. The "✏️ Edit Call" and "🗑️ Delete Call" controls on your listings will only be visible on the portal when you are signed in under your matching creator email.
                   </p>
                 </div>
               </div>
@@ -1074,9 +1074,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Team Match & Slot Reservations</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>3. Admin Review &amp; Slot Reservations</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Students browse listings and click "View & Apply" to reserve open slots by entering their details and LinkedIn profile URL. If the target slots are full, students can join the waitlist buffer.
+                    Submitted calls undergo admin review to prevent spam. Once approved, the project listing goes live. Students browse active calls and reserve open slots by submitting their details and LinkedIn URLs, or join the waitlist if full.
                   </p>
                 </div>
               </div>
@@ -1089,9 +1089,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>Closing</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>4. Secure Editing &amp; Expiration</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    When your review window expires, the project automatically closes and disappears from the public feed. A report listing the names, semesters, and direct LinkedIn profile links of all applicants is instantly emailed to your email address.
+                    Modify or delete your live listing by verifying your Secret Passkey. Entering the wrong passkey 5 times locks the project, requiring admin contact (numbers at the bottom of the page). Once the review window expires, a candidate applicant report is instantly emailed to you.
                   </p>
                 </div>
               </div>
