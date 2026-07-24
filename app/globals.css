@@ -29,6 +29,7 @@
   --ink: #e6edf3;
   --ink-soft: #8b9fb0;
   --white: #111d2e;
+  --amber-dim: #f39c12;
   
   --background: var(--paper);
   --foreground: var(--ink);

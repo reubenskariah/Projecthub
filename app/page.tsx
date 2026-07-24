@@ -704,7 +704,15 @@ export default function HomePage() {
               aria-label="Toggle Theme"
               title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21M4.95 4.95l1.59 1.59m10.92 10.92l1.59 1.59M3 12h2.25m13.5 0H21M5.75 18.25l1.59-1.59M16.66 7.34l1.59-1.59M12 9a3 3 0 100 6 3 3 0 000-6z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor" style={{ width: '20px', height: '20px' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                </svg>
+              )}
             </button>
             {loggedInEmail ? (
               <div 
@@ -914,23 +922,23 @@ export default function HomePage() {
             </div>
             
             {selectedKeyword && (
-              <div className="mt-2 text-xs font-mono text-[#0f2a47] flex items-center gap-2">
+              <div className="mt-2 text-xs font-mono text-[var(--ink)] flex items-center gap-2">
                 <span>Active Filter: <strong>{selectedKeyword}</strong> (showing database exact matches)</span>
               </div>
             )}
             
-            <div className="results-count mt-3 font-mono text-xs text-[#4a6178]">
+            <div className="results-count mt-3 font-mono text-xs text-[var(--ink-soft)]">
               {loading ? 'Searching projects...' : `${filteredProjects.length} open call${filteredProjects.length === 1 ? '' : 's'}`}
             </div>
           </div>
 
           {/* Project Cards Grid */}
           {loading ? (
-            <div className="empty-state text-center font-mono text-sm py-16 text-[#4a6178]">
+            <div className="empty-state text-center font-mono text-sm py-16 text-[var(--ink-soft)]">
               Loading project feed from database...
             </div>
           ) : filteredProjects.length === 0 ? (
-            <div className="empty-state text-center font-mono text-sm py-16 text-[#4a6178]">
+            <div className="empty-state text-center font-mono text-sm py-16 text-[var(--ink-soft)]">
               NO MATCHES IN RANGE — try clearing a filter or searching a different keyword.
             </div>
           ) : (
@@ -969,7 +977,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="gauge-wrap mt-3">
-                        <div className="gauge-label text-[10px] flex justify-between text-[#4a6178]">
+                        <div className="gauge-label text-[10px] flex justify-between text-[var(--ink-soft)]">
                           <span>Review window</span>
                           <span>{daysLeft <= 0 ? 'closes today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}</span>
                         </div>
