@@ -1533,7 +1533,7 @@ export default function HomePage() {
                             </div>
                             <div className="form-field">
                               <label>Semester</label>
-                              <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="e.g. Sem 5" />
+                              <input type="text" required value={applySem} onChange={(e) => setApplySem(e.target.value)} placeholder="Enter your semester" />
                             </div>
                           </div>
                           <div className="form-row">

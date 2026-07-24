@@ -743,7 +743,7 @@ nav.top-actions {
 
 .modal-head {
   background: var(--blue-deep);
-  color: var(--white);
+  color: #eef2ee;
   padding: 18px 22px;
   display: flex;
   justify-content: space-between;
@@ -765,7 +765,7 @@ nav.top-actions {
 .modal-close {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  color: var(--white);
+  color: #eef2ee;
   width: 30px;
   height: 30px;
   border-radius: 50%;
