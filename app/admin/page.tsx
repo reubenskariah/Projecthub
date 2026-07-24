@@ -56,8 +56,13 @@ const DEFAULT_MENTORS: Mentor[] = [
   { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "CE", contact: "pillai.civil@college.edu" }
 ];
 
+function generateLocalId(): string {
+  return String(Date.now());
+}
+
 export default function AdminPage() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [adminUser, setAdminUser] = useState('');
   const [adminPass, setAdminPass] = useState('');
@@ -84,29 +89,47 @@ export default function AdminPage() {
     if (typeof window !== 'undefined') {
       const auth = sessionStorage.getItem('iykyk_admin_auth');
       if (auth === 'true') {
-        setIsAdminLoggedIn(true);
+        Promise.resolve().then(() => {
+          setIsAdminLoggedIn(true);
+        });
       }
-      setCheckingAuth(false);
+      Promise.resolve().then(() => {
+        setCheckingAuth(false);
+      });
     }
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    const pendingRes = await fetchPendingProjects();
-    const allRes = await fetchAllProjects();
-    
-    if (pendingRes.success && pendingRes.data) {
-      setPendingProjects(pendingRes.data as Project[]);
+  // Synchronize and toggle theme preferences
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('ph_theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        Promise.resolve().then(() => {
+          setTheme('dark');
+        });
+        document.documentElement.classList.add('dark');
+      } else {
+        Promise.resolve().then(() => {
+          setTheme('light');
+        });
+        document.documentElement.classList.remove('dark');
+      }
     }
-    if (allRes.success && allRes.data) {
-      setAllProjects(allRes.data as Project[]);
-    }
+  }, []);
 
-    await loadMentorsData();
-    setLoading(false);
+  const toggleTheme = () => {
+    if (theme === 'light') {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('ph_theme', 'dark');
+    } else {
+      setTheme('light');
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('ph_theme', 'light');
+    }
   };
 
-  const loadMentorsData = async () => {
+  const loadMentorsData = React.useCallback(async () => {
     const mentorRes = await fetchMentors();
     if (mentorRes.success && mentorRes.data) {
       setMentors(mentorRes.data as Mentor[]);
@@ -123,13 +146,31 @@ export default function AdminPage() {
         }
       }
     }
-  };
+  }, []);
+
+  const loadData = React.useCallback(async () => {
+    setLoading(true);
+    const pendingRes = await fetchPendingProjects();
+    const allRes = await fetchAllProjects();
+    
+    if (pendingRes.success && pendingRes.data) {
+      setPendingProjects(pendingRes.data as Project[]);
+    }
+    if (allRes.success && allRes.data) {
+      setAllProjects(allRes.data as Project[]);
+    }
+
+    await loadMentorsData();
+    setLoading(false);
+  }, [loadMentorsData]);
 
   useEffect(() => {
     if (isAdminLoggedIn) {
-      loadData();
+      Promise.resolve().then(() => {
+        loadData();
+      });
     }
-  }, [isAdminLoggedIn]);
+  }, [isAdminLoggedIn, loadData]);
 
   // Helper to retrieve the current session admin password
   const getAdminPass = (): string => {
@@ -172,7 +213,7 @@ export default function AdminPage() {
       setActionMessage({ type: 'success', text: 'Project call approved and pushed live to feed!' });
       loadData();
     } else {
-      setActionMessage({ type: 'error', text: res.error || 'Failed to approve project call.' });
+      setActionMessage({ type: 'error', text: (res as { error?: string }).error || 'Failed to approve project call.' });
     }
   };
 
@@ -187,7 +228,7 @@ export default function AdminPage() {
       setActionMessage({ type: 'success', text: 'Project call and related applicants successfully deleted.' });
       loadData();
     } else {
-      setActionMessage({ type: 'error', text: res.error || 'Failed to delete project call.' });
+      setActionMessage({ type: 'error', text: (res as { error?: string }).error || 'Failed to delete project call.' });
     }
   };
 
@@ -212,7 +253,7 @@ export default function AdminPage() {
         );
         setActionMessage({ type: 'success', text: 'Mentor updated locally (localStorage fallback).' });
       } else {
-        const newId = String(Date.now());
+        const newId = generateLocalId();
         updatedMentors.push({ id: newId, ...mentorData });
         setActionMessage({ type: 'success', text: 'Mentor added locally (localStorage fallback).' });
       }
@@ -230,7 +271,7 @@ export default function AdminPage() {
           loadMentorsData();
           resetMentorForm();
         } else {
-          setActionMessage({ type: 'error', text: res.error || 'Failed to update mentor.' });
+          setActionMessage({ type: 'error', text: (res as { error?: string }).error || 'Failed to update mentor.' });
         }
       } else {
         const res = await addMentor(mentorData, getAdminPass());
@@ -239,7 +280,7 @@ export default function AdminPage() {
           loadMentorsData();
           resetMentorForm();
         } else {
-          setActionMessage({ type: 'error', text: res.error || 'Failed to add mentor.' });
+          setActionMessage({ type: 'error', text: (res as { error?: string }).error || 'Failed to add mentor.' });
         }
       }
     }
@@ -268,7 +309,7 @@ export default function AdminPage() {
         loadMentorsData();
         if (editingMentorId === id) resetMentorForm();
       } else {
-        setActionMessage({ type: 'error', text: res.error || 'Failed to delete mentor.' });
+        setActionMessage({ type: 'error', text: (res as { error?: string }).error || 'Failed to delete mentor.' });
       }
     }
   };
@@ -304,7 +345,7 @@ export default function AdminPage() {
       {/* Top Navbar */}
       <header className="topbar">
         <div className="topbar-inner">
-          <div className="brand cursor-default">
+          <div className="brand cursor-pointer" onClick={() => window.location.href = '/'}>
             <svg style={{ height: '38px', width: 'auto', display: 'block' }} viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g>
                 <path d="M45 40 L75 40" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
@@ -336,13 +377,21 @@ export default function AdminPage() {
             </svg>
           </div>
           
-          {isAdminLoggedIn && (
-            <nav className="top-actions">
+          <nav className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle-btn cursor-pointer"
+              aria-label="Toggle Theme"
+              title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            {isAdminLoggedIn && (
               <button onClick={handleSignOut} className="btn btn-ghost btn-sm font-semibold cursor-pointer">
                 Sign Out
               </button>
-            </nav>
-          )}
+            )}
+          </nav>
         </div>
       </header>
 
@@ -535,7 +584,7 @@ export default function AdminPage() {
                   <div>
                     {isMentorsTableMissing && (
                       <div className="mb-4 p-3 bg-[#eef2ee] border border-dashed border-[#c68227] text-[#c68227] text-xs font-mono">
-                        💡 Supabase mentors table not found. Storing and managing changes locally via your browser's localStorage fallback.
+                        💡 Supabase mentors table not found. Storing and managing changes locally via your browser&apos;s localStorage fallback.
                       </div>
                     )}
                     

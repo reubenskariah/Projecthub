@@ -21,6 +21,31 @@
   --foreground: var(--ink);
 }
 
+.dark {
+  --blue-deep: #07111e;
+  --blue-mid: #142b45;
+  --paper: #0b1320;
+  --paper-line: #19293b;
+  --ink: #e6edf3;
+  --ink-soft: #8b9fb0;
+  --white: #111d2e;
+  
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+.dark .msg-banner.ok {
+  background: #143522;
+  color: #52b788;
+  border-color: #38b000;
+}
+
+.dark .msg-banner.error {
+  background: #3a1c1c;
+  color: #ff8b8b;
+  border-color: #c1502e;
+}
+
 body {
   font-family: var(--sans);
   color: var(--ink);
@@ -989,6 +1014,56 @@ footer {
   }
 }
 
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.15);
+  opacity: 0.9;
+}
+
+/* Floating Action Button for Mobile viewports */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--amber);
+  color: var(--blue-deep);
+  border: 1.5px solid var(--blue-deep);
+  box-shadow: 4px 4px 0 var(--blue-deep);
+  border-radius: 50px;
+  padding: 12px 20px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13.5px;
+  z-index: 50;
+  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-fab:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--blue-deep);
+}
+
+.mobile-fab:active {
+  transform: translate(0, 0);
+  box-shadow: 2px 2px 0 var(--blue-deep);
+}
+
 @media (prefers-reduced-motion:reduce) {
   * {
     animation: none !important;
@@ -1036,6 +1111,46 @@ footer {
   .queue-actions {
     justify-content: flex-end;
     margin-top: 4px;
+  }
+
+  /* Mobile Layout for Header Topbar */
+  .topbar-inner {
+    display: grid !important;
+    grid-template-areas: 
+      "brand actions"
+      "nav nav" !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  
+  .brand {
+    grid-area: brand;
+    justify-content: flex-start;
+  }
+  
+  .top-actions {
+    grid-area: actions;
+    justify-content: flex-end;
+    gap: 10px !important;
+  }
+  
+  .nav-links {
+    grid-area: nav;
+    justify-content: center;
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    padding-top: 8px;
+    width: 100%;
+  }
+
+  .top-actions .btn-amber {
+    display: none !important; /* Hide header + Call button on mobile */
+  }
+
+  .mobile-fab {
+    display: flex; /* Show FAB on mobile */
   }
 }
 

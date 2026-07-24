@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { Applicant } from '@/app/actions/projectActions';
 
 export async function POST(req: Request) {
   try {
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
               </tr>
             </thead>
             <tbody>
-              ${applicants.map((app: any) => `
+              ${applicants.map((app: Applicant) => `
                 <tr style="border-bottom: 1px solid #eef2ee;">
                   <td style="padding: 10px; border: 1px solid #c9d6d1; font-weight: bold; color: #0f2a47;">${app.name}</td>
                   <td style="padding: 10px; border: 1px solid #c9d6d1;">${app.dept_sem}</td>
@@ -169,9 +170,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, processedCount: processed.length, processedIds: processed });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in cron route handler:', err);
-    return NextResponse.json({ success: false, error: err.message || 'An unexpected error occurred.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: (err as Error).message || 'An unexpected error occurred.' }, { status: 500 });
   }
 }
 

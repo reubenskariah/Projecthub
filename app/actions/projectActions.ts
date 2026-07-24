@@ -126,9 +126,9 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     }
 
     return { success: true, data };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in createProjectCall server action:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 
@@ -156,25 +156,25 @@ export async function fetchActiveProjects(keywordFilter?: string) {
     }
 
     // Sort applicants for each project and filter out filled ones
-    const activeProjects = (data || [])
-      .map((project: any) => {
+    const activeProjects = ((data || []) as (ProjectCall & { applicants: Applicant[] })[])
+      .map((project) => {
         const sortedApplicants = (project.applicants || []).sort(
-          (a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+          (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
         );
         return {
           ...project,
           applicants: sortedApplicants
         };
       })
-      .filter((project: any) => {
-        const confirmedCount = project.applicants.filter((a: any) => a.status === 'confirmed').length;
+      .filter((project) => {
+        const confirmedCount = project.applicants.filter((a) => a.status === 'confirmed').length;
         return confirmedCount < project.slots_needed;
       });
 
     return { success: true, data: activeProjects };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in fetchActiveProjects server action:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.', data: [] };
   }
 }
 
@@ -196,9 +196,9 @@ export async function fetchPendingProjects() {
     }
 
     return { success: true, data: data || [] };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in fetchPendingProjects:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.', data: [] };
   }
 }
 
@@ -219,9 +219,9 @@ export async function fetchAllProjects() {
     }
 
     // Sort applicants for each project
-    const projectsWithApplicants = (data || []).map((project: any) => {
+    const projectsWithApplicants = ((data || []) as (ProjectCall & { applicants: Applicant[] })[]).map((project) => {
       const sortedApplicants = (project.applicants || []).sort(
-        (a: any, b: any) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+        (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
       );
       return {
         ...project,
@@ -230,9 +230,9 @@ export async function fetchAllProjects() {
     });
 
     return { success: true, data: projectsWithApplicants };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in fetchAllProjects:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.', data: [] };
   }
 }
 
@@ -261,9 +261,9 @@ export async function approveProjectCall(projectId: string, adminPass: string) {
     }
 
     return { success: true, data };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in approveProjectCall:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 
@@ -299,9 +299,9 @@ export async function deleteProjectCall(projectId: string, adminPass: string) {
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in deleteProjectCall:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 
@@ -399,9 +399,9 @@ export async function reserveProjectSlot(
         ? "Slot successfully reserved! The project creator can now view your professional profile."
         : "The confirmed slots are full. You have been placed on the waitlist."
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in reserveProjectSlot server action:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 
@@ -425,9 +425,9 @@ export async function fetchMentors() {
     }
 
     return { success: true, data: data || [] };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in fetchMentors:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.', data: [] };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.', data: [] };
   }
 }
 
@@ -460,8 +460,8 @@ export async function addMentor(mentor: { name: string; college: string; dept: s
     }
 
     return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -495,8 +495,8 @@ export async function updateMentor(mentor: { id: string; name: string; college: 
     }
 
     return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -523,8 +523,8 @@ export async function deleteMentor(mentorId: string, adminPass: string) {
     }
 
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -610,9 +610,9 @@ export async function updateProjectAsCreator(
     }
 
     return { success: true, data };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in updateProjectAsCreator server action:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 
@@ -667,9 +667,9 @@ export async function deleteProjectAsCreator(projectId: string, callerEmail: str
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in deleteProjectAsCreator server action:', err);
-    return { success: false, error: err.message || 'An unexpected error occurred.' };
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
 

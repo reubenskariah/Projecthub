@@ -91,13 +91,13 @@ export default function ProjectForm({ onSuccess, onClose, initialEmail = '' }: P
       } else {
         setMessage({
           type: 'error',
-          text: res.error || 'Failed to submit project call.'
+          text: (res as { error?: string }).error || 'Failed to submit project call.'
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setMessage({
         type: 'error',
-        text: err.message || 'An unexpected error occurred.'
+        text: (err as Error).message || 'An unexpected error occurred.'
       });
     } finally {
       setIsSubmitting(false);

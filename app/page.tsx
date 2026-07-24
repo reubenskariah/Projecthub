@@ -50,6 +50,7 @@ const DEFAULT_MENTORS: Mentor[] = [
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'feed' | 'mentors'>('feed');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [projects, setProjects] = useState<Project[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>(DEFAULT_MENTORS);
   const [loading, setLoading] = useState(true);
@@ -156,6 +157,32 @@ export default function HomePage() {
     }
   }, []);
 
+  // Synchronize and toggle theme preferences
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('ph_theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        setTheme('dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        setTheme('light');
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === 'light') {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('ph_theme', 'dark');
+    } else {
+      setTheme('light');
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('ph_theme', 'light');
+    }
+  };
+
   // Track wrong attempts when selectedProject changes
   useEffect(() => {
     if (selectedProject) {
@@ -174,10 +201,18 @@ export default function HomePage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    interface Click {
+      x: number;
+      y: number;
+      radius: number;
+      maxRadius: number;
+      opacity: number;
+    }
+
     let animationFrameId: number;
-    let particles: any[] = [];
-    let clicks: any[] = [];
-    let mouse = { x: null as number | null, y: null as number | null, radius: 150 };
+    let particles: Particle[] = [];
+    const clicks: Click[] = [];
+    const mouse = { x: null as number | null, y: null as number | null, radius: 150 };
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -393,7 +428,7 @@ export default function HomePage() {
       if (res.success) {
         setApplyMessage({
           type: 'success',
-          text: res.message || 'Slot reserved successfully!'
+          text: (res as { message?: string }).message || 'Slot reserved successfully!'
         });
         
         // Clear fields
@@ -416,13 +451,13 @@ export default function HomePage() {
       } else {
         setApplyMessage({
           type: 'error',
-          text: res.error || 'Failed to apply.'
+          text: (res as { error?: string }).error || 'Failed to apply.'
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setApplyMessage({
         type: 'error',
-        text: err.message || 'An unexpected error occurred.'
+        text: (err as Error).message || 'An unexpected error occurred.'
       });
     } finally {
       setSubmittingApply(false);
@@ -545,17 +580,18 @@ export default function HomePage() {
         }
       }
     } else {
-      if (res.error && res.error.toLowerCase().includes('passkey')) {
+      const errRes = res as { error?: string };
+      if (errRes.error && errRes.error.toLowerCase().includes('passkey')) {
         const nextAttempts = wrongAttempts + 1;
         setWrongAttempts(nextAttempts);
         localStorage.setItem(`ph_wrong_attempts_${selectedProject.id}`, nextAttempts.toString());
         if (nextAttempts >= 5) {
           setApplyMessage({ type: 'error', text: 'You have entered the wrong passkey 5 times. Please contact the administrator. Admin details are available at the bottom of the page.' });
         } else {
-          setApplyMessage({ type: 'error', text: `${res.error} (Attempt ${nextAttempts}/5)` });
+          setApplyMessage({ type: 'error', text: `${errRes.error} (Attempt ${nextAttempts}/5)` });
         }
       } else {
-        setApplyMessage({ type: 'error', text: res.error || 'Failed to update project.' });
+        setApplyMessage({ type: 'error', text: errRes.error || 'Failed to update project.' });
       }
     }
     setSubmittingApply(false);
@@ -580,17 +616,18 @@ export default function HomePage() {
       // Reload projects
       loadProjects(selectedKeyword || undefined);
     } else {
-      if (res.error && res.error.toLowerCase().includes('passkey')) {
+      const errRes = res as { error?: string };
+      if (errRes.error && errRes.error.toLowerCase().includes('passkey')) {
         const nextAttempts = wrongAttempts + 1;
         setWrongAttempts(nextAttempts);
         localStorage.setItem(`ph_wrong_attempts_${selectedProject.id}`, nextAttempts.toString());
         if (nextAttempts >= 5) {
           setApplyMessage({ type: 'error', text: 'You have entered the wrong passkey 5 times. Please contact the administrator. Admin details are available at the bottom of the page.' });
         } else {
-          setApplyMessage({ type: 'error', text: `${res.error} (Attempt ${nextAttempts}/5)` });
+          setApplyMessage({ type: 'error', text: `${errRes.error} (Attempt ${nextAttempts}/5)` });
         }
       } else {
-        setApplyMessage({ type: 'error', text: res.error || 'Failed to delete project.' });
+        setApplyMessage({ type: 'error', text: errRes.error || 'Failed to delete project.' });
       }
     }
     setSubmittingApply(false);
@@ -661,6 +698,14 @@ export default function HomePage() {
             </button>
           </nav>
           <nav className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle-btn cursor-pointer"
+              aria-label="Toggle Theme"
+              title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
             {loggedInEmail ? (
               <div 
                 className="user-badge" 
@@ -733,7 +778,7 @@ export default function HomePage() {
                     <svg style={{ width: 'clamp(60px, 12vw, 84px)', height: 'auto', display: 'block' }} viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M45 40 L75 40" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
                       <path d="M45 75 L75 75" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" />
-                      <path d="M45 40 L45 75" stroke="#1E293B" strokeWidth="6" strokeLinecap="round" />
+                      <path d="M45 40 L45 75" stroke="var(--ink)" strokeWidth="6" strokeLinecap="round" />
                       <path 
                         d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" 
                         stroke="#2563EB" 
@@ -741,7 +786,7 @@ export default function HomePage() {
                         strokeLinecap="round" 
                         fill="none" 
                       />
-                      <circle cx="45" cy="40" r="8" fill="#1E293B" />
+                      <circle cx="45" cy="40" r="8" fill="var(--ink)" />
                       <circle cx="75" cy="40" r="8" fill="#2563EB" />
                       <circle cx="45" cy="75" r="8" fill="#94A3B8" />
                       <circle cx="75" cy="75" r="5" fill="#38BDF8" />
@@ -751,7 +796,7 @@ export default function HomePage() {
                   {/* Right: Logo Name and Quote */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
                     {/* Logo Name (Bigger size, aligned left, close to icon) */}
-                    <h1 style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 'clamp(36px, 8vw, 72px)', color: '#0f2a47', margin: 0, lineHeight: 0.85, letterSpacing: '-2.5px' }}>
+                    <h1 style={{ fontFamily: 'var(--sans)', fontWeight: 800, fontSize: 'clamp(36px, 8vw, 72px)', color: 'var(--ink)', margin: 0, lineHeight: 0.85, letterSpacing: '-2.5px' }}>
                       project<span style={{ color: '#2563EB', fontWeight: 900 }}>hub</span>
                     </h1>
                     
@@ -770,7 +815,7 @@ export default function HomePage() {
                   </div>
                   
                   {/* Subtitle sentence (matching logo deep blue color) */}
-                  <div style={{ fontFamily: 'var(--sans)', fontSize: '13.5px', color: '#0f2a47', lineHeight: 1.5, maxWidth: '460px', fontWeight: 500 }}>
+                  <div style={{ fontFamily: 'var(--sans)', fontSize: '13.5px', color: 'var(--ink)', lineHeight: 1.5, maxWidth: '460px', fontWeight: 500 }}>
                     No student should have to build their vision alone. <span style={{ color: '#2563EB', fontWeight: 700 }}>ProjectHub</span> ensures that great ideas always find their team. We bridge the gap between imagination and execution by simplifying how teams form on campus. Through quick slot-reservations and professional LinkedIn integration, we help you build your future, together.
                   </div>
                 </div>
@@ -795,21 +840,21 @@ export default function HomePage() {
                 </div>
 
                 <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue-deep)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
                     {loading ? '—' : stats.openCount}
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
-                    <strong style={{ display: 'block', color: 'var(--blue-deep)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Active Projects</strong>
+                    <strong style={{ display: 'block', color: 'var(--ink)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Active Projects</strong>
                     Open match calls looking for team members
                   </div>
                 </div>
 
                 <div className="hero-stat-box" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--white)', border: '1.5px solid var(--blue-deep)', padding: '12px 16px', borderRadius: 'var(--radius)', boxShadow: '3px 3px 0 rgba(15,42,71,0.15)' }}>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue-deep)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--mono)', minWidth: '48px' }}>
                     {mentors.length}
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.35 }}>
-                    <strong style={{ display: 'block', color: 'var(--blue-deep)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Faculty Mentors</strong>
+                    <strong style={{ display: 'block', color: 'var(--ink)', fontFamily: 'var(--mono)', textTransform: 'uppercase', fontSize: '11px' }}>Faculty Mentors</strong>
                     Guides ready to assist academic groups
                   </div>
                 </div>
@@ -1043,9 +1088,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>1. Create &amp; Secure Project Call</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--ink)' }}>1. Create &amp; Secure Project Call</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Click the "+ Call for a project" button. Enter your details and email. Enforce access security by setting a robust <strong>8-character Secret Passkey</strong> (which must contain a capital letter, lowercase letter, number, and special character). Select tags and set a review window of 1 to 14 days.
+                    Click the &quot;+ Call for a project&quot; button. Enter your details and email. Enforce access security by setting a robust <strong>8-character Secret Passkey</strong> (which must contain a capital letter, lowercase letter, number, and special character). Select tags and set a review window of 1 to 14 days.
                   </p>
                 </div>
               </div>
@@ -1058,9 +1103,9 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>2. Sign In &amp; Session Persistence</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--ink)' }}>2. Sign In &amp; Session Persistence</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Sign In at the top-right using your email address, which persists your session in your browser. The "✏️ Edit Call" and "🗑️ Delete Call" controls on your listings will only be visible on the portal when you are signed in under your matching creator email.
+                    Sign In at the top-right using your email address, which persists your session in your browser. The &quot;✏️ Edit Call&quot; and &quot;🗑️ Delete Call&quot; controls on your listings will only be visible on the portal when you are signed in under your matching creator email.
                   </p>
                 </div>
               </div>
@@ -1073,7 +1118,7 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>3. Admin Review &amp; Slot Reservations</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--ink)' }}>3. Admin Review &amp; Slot Reservations</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
                     Submitted calls undergo admin review to prevent spam. Once approved, the project listing goes live. Students browse active calls and reserve open slots by submitting their details and LinkedIn URLs, or join the waitlist if full.
                   </p>
@@ -1088,7 +1133,7 @@ export default function HomePage() {
                   className="flex-shrink-0"
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--blue-deep)' }}>4. Secure Editing &amp; Expiration</h3>
+                  <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--ink)' }}>4. Secure Editing &amp; Expiration</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
                     Modify or delete your live listing by verifying your Secret Passkey. Entering the wrong passkey 5 times locks the project, requiring admin contact (numbers at the bottom of the page). Once the review window expires, a candidate applicant report is instantly emailed to you.
                   </p>
@@ -1325,7 +1370,7 @@ export default function HomePage() {
                     </div>
                   )}
                   <div className="p-4 bg-red-50 border border-red-200 rounded-sm text-sm text-[#c1502e] mb-4">
-                    <strong>⚠️ WARNING:</strong> You are about to permanently delete the project call <strong>"{selectedProject.title}"</strong>. This will delete all candidate bookings and waitlists. This action cannot be undone.
+                    <strong>⚠️ WARNING:</strong> You are about to permanently delete the project call <strong>&quot;{selectedProject.title}&quot;</strong>. This will delete all candidate bookings and waitlists. This action cannot be undone.
                   </div>
 
                   <div className="form-field">
@@ -1555,6 +1600,16 @@ export default function HomePage() {
         <span style={{ color: 'var(--paper-line)' }}>&middot;</span>
         <span>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 73065 60178</a></span>
       </footer>
+      {/* Mobile Floating Action Button (FAB) */}
+      <button 
+        className="mobile-fab cursor-pointer" 
+        onClick={() => setIsPostModalOpen(true)}
+        aria-label="Post a project call"
+        title="Post a project call"
+      >
+        <span>➕</span>
+        <span>Call</span>
+      </button>
     </>
   );
 }
