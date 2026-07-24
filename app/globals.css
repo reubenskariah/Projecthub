@@ -964,14 +964,10 @@ form.apply-form {
 }
 
 footer {
-  border-top: 1.5px solid var(--blue-deep);
-  padding: 20px 24px;
   text-align: center;
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-soft);
-  background: rgba(238, 242, 238, 0.7);
-  backdrop-filter: blur(6px);
   position: relative;
   z-index: 10;
 }
@@ -1152,5 +1148,130 @@ footer {
   .mobile-fab {
     display: flex; /* Show FAB on mobile */
   }
+}
+
+/* ==========================================
+   DARK THEME OVERRIDES & HIGH CONTRAST FIXES
+   ========================================== */
+.dark .theme-toggle-btn {
+  color: #eef2ee !important;
+}
+
+.dark .btn-ghost {
+  color: #eef2ee !important;
+}
+
+.dark .btn-solid {
+  background: var(--amber) !important;
+  color: var(--blue-deep) !important;
+}
+
+.dark .btn-solid:hover {
+  background: #f0b358 !important;
+}
+
+.dark .btn-outline {
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+}
+
+.dark .btn-outline:hover {
+  background: var(--amber) !important;
+  color: var(--blue-deep) !important;
+}
+
+/* Borders and Box Boundaries Visibility */
+.dark .hero-block,
+.dark .titleblock,
+.dark .titleblock-main,
+.dark .card,
+.dark .modal,
+.dark .search-row input[type=text],
+.dark .suggestions-dropdown,
+.dark .form-field input,
+.dark .form-field select,
+.dark .form-field textarea,
+.dark .applicant {
+  border-color: #385170 !important;
+}
+
+.dark .card:hover,
+.dark .hero-block,
+.dark .suggestions-dropdown,
+.dark .modal {
+  box-shadow: 6px 6px 0 #1e2c3c !important;
+}
+
+.dark .hero-region-right {
+  border-left-color: #385170 !important;
+  background: rgba(20, 43, 69, 0.25) !important;
+}
+
+/* Input Fields and Dropdowns backgrounds */
+.dark .search-row input[type=text],
+.dark .form-field input,
+.dark .form-field select,
+.dark .form-field textarea,
+.dark .suggestions-dropdown,
+.dark .kw-dropdown {
+  background: #111d2e !important;
+  color: var(--ink) !important;
+}
+
+.dark .kw-dropdown-item:hover,
+.dark .suggestion-item:hover {
+  background: var(--paper-line) !important;
+  color: var(--ink) !important;
+}
+
+/* Text Element Colors & Contrast */
+.dark .results-count,
+.dark .empty-state,
+.dark .helper {
+  color: var(--ink-soft) !important;
+}
+
+/* Link Visibility in list */
+.dark .applicant a {
+  color: var(--cyan-line) !important;
+}
+
+/* Slot dots and Gauge Visibility */
+.dark .dot {
+  border-color: var(--cyan-line) !important;
+}
+
+.dark .dot.filled {
+  background: var(--cyan-line) !important;
+}
+
+.dark .gauge {
+  background: #111d2e !important;
+  border-color: #385170 !important;
+}
+
+.dark .gauge-ticks {
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 9%, rgba(255, 255, 255, 0.15) 9%, rgba(255, 255, 255, 0.15) calc(9% + 1px)) !important;
+}
+
+/* Keyword Tag Overrides */
+.dark .selected-kw-tag {
+  background: var(--cyan-line) !important;
+  color: var(--blue-deep) !important;
+}
+
+.dark .selected-kw-tag button {
+  color: var(--blue-deep) !important;
+}
+
+.dark .selected-kw-tag button:hover {
+  color: #fff !important;
+}
+
+/* Red alerts inside forms */
+.dark .bg-red-50 {
+  background: #3a1c1c !important;
+  color: #ff8b8b !important;
+  border-color: #c1502e !important;
 }
 

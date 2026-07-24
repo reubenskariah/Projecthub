@@ -1438,10 +1438,10 @@ export default function HomePage() {
                   <div style={{ background: 'var(--paper)', border: '1px solid var(--paper-line)', padding: '12px 16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                     <div>
                       <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '2px' }}>Project Called By</span>
-                      <strong style={{ fontSize: '15px', color: 'var(--blue-deep)' }}>{selectedProject.caller_name}</strong>
+                      <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{selectedProject.caller_name}</strong>
                     </div>
                     <div>
-                      <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--blue-mid)', fontWeight: 'bold' }}>PROJECT CREATOR</span>
+                      <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--cyan-line)', fontWeight: 'bold' }}>PROJECT CREATOR</span>
                     </div>
                   </div>
 
@@ -1562,7 +1562,7 @@ export default function HomePage() {
                           <button
                             type="submit"
                             disabled={submittingApply}
-                            className={`btn btn-block ${isFull ? 'btn-outline border-[#0f2a47] text-[#0f2a47]' : 'btn-solid bg-[#0f2a47] text-white'}`}
+                            className={`btn btn-block ${isFull ? 'btn-outline' : 'btn-solid'}`}
                           >
                             {submittingApply ? 'Processing...' : isFull ? 'Join Waitlist' : 'Reserve My Slot'}
                           </button>
@@ -1583,7 +1583,7 @@ export default function HomePage() {
           margin: '40px auto 24px',
           padding: '24px 24px 0',
           fontFamily: 'var(--mono)',
-          fontSize: '11px',
+          fontSize: '11.5px',
           color: 'var(--ink-soft)',
           borderTop: '1px dashed var(--paper-line)',
           display: 'flex',
@@ -1591,14 +1591,16 @@ export default function HomePage() {
           alignItems: 'center',
           gap: '16px',
           flexWrap: 'wrap',
-          width: '100%'
+          width: '100%',
+          background: 'transparent',
+          boxShadow: 'none'
         }}
       >
-        <span>JESWIN: <a href="tel:+918281279456" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 82812 79456</a></span>
+        <span>JESWIN: <a href="tel:+918281279456" style={{ textDecoration: 'underline', color: 'var(--ink-soft)' }}>+91 82812 79456</a></span>
         <span style={{ color: 'var(--paper-line)' }}>&middot;</span>
-        <span>REUBEN: <a href="tel:+919539375601" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 9539375601</a></span>
+        <span>REUBEN: <a href="tel:+919539375601" style={{ textDecoration: 'underline', color: 'var(--ink-soft)' }}>+91 9539375601</a></span>
         <span style={{ color: 'var(--paper-line)' }}>&middot;</span>
-        <span>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'inherit' }}>+91 73065 60178</a></span>
+        <span>SONA: <a href="tel:+917306560178" style={{ textDecoration: 'underline', color: 'var(--ink-soft)' }}>+91 73065 60178</a></span>
       </footer>
       {/* Mobile Floating Action Button (FAB) */}
       <button 
