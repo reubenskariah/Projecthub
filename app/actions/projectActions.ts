@@ -792,10 +792,12 @@ export async function sendProjectReportEmail(projectId: string) {
       </div>
     `;
 
-    // 4. Send email via Resend API POST request
+    // 4. Send email via SendGrid or Resend API POST request
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      console.error('RESEND_API_KEY is not defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
+
+    if (!sendgridApiKey && !resendApiKey) {
+      console.error('Neither SENDGRID_API_KEY nor RESEND_API_KEY is defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
       await supabase
         .from('projects')
         .update({
@@ -803,36 +805,76 @@ export async function sendProjectReportEmail(projectId: string) {
           email_sent: true
         })
         .eq('id', projectId);
-      return { success: false, error: 'RESEND_API_KEY is not configured.' };
+      return { success: false, error: 'Email service API keys are not configured.' };
     }
 
-    const fromEmail = process.env.EMAIL_FROM || 'ProjectHub <onboarding@resend.dev>';
     const subject = isEarlyCompletion 
       ? `Project Match Completed (Early): ${project.title}`
       : `Project Match Complete: ${project.title}`;
 
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendApiKey}`
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: callerEmail,
-        subject: subject,
-        html: emailBody
-      })
-    });
-
     let setSent = false;
-    if (emailResponse.ok) {
-      setSent = true;
-    } else {
-      const errorText = await emailResponse.text();
-      console.error(`Resend API failed for project ${projectId}:`, errorText);
-      if (emailResponse.status === 400 || emailResponse.status === 401 || emailResponse.status === 403 || emailResponse.status === 422) {
-        setSent = true; // Mark as sent to prevent infinite loops
+
+    if (sendgridApiKey) {
+      const fromEmail = process.env.EMAIL_FROM || 'reubenin12@gmail.com'; // Default verified Single Sender Gmail
+      const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sendgridApiKey}`
+        },
+        body: JSON.stringify({
+          personalizations: [
+            {
+              to: [{ email: callerEmail }]
+            }
+          ],
+          from: {
+            email: fromEmail,
+            name: 'ProjectHub'
+          },
+          subject: subject,
+          content: [
+            {
+              type: 'text/html',
+              value: emailBody
+            }
+          ]
+        })
+      });
+
+      if (emailResponse.ok) {
+        setSent = true;
+      } else {
+        const errorText = await emailResponse.text();
+        console.error(`SendGrid API failed for project ${projectId}:`, errorText);
+        if (emailResponse.status === 400 || emailResponse.status === 401 || emailResponse.status === 403) {
+          setSent = true; // Mark as sent to prevent loops
+        }
+      }
+    } else if (resendApiKey) {
+      const fromEmail = process.env.EMAIL_FROM || 'ProjectHub <onboarding@resend.dev>';
+      const emailResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendApiKey}`
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: callerEmail,
+          subject: subject,
+          html: emailBody
+        })
+      });
+
+      if (emailResponse.ok) {
+        setSent = true;
+      } else {
+        const errorText = await emailResponse.text();
+        console.error(`Resend API failed for project ${projectId}:`, errorText);
+        if (emailResponse.status === 400 || emailResponse.status === 401 || emailResponse.status === 403 || emailResponse.status === 422) {
+          setSent = true;
+        }
       }
     }
 
