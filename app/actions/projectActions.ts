@@ -1,6 +1,7 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import nodemailer from 'nodemailer';
 
 function isDbConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -792,12 +793,14 @@ export async function sendProjectReportEmail(projectId: string) {
       </div>
     `;
 
-    // 4. Send email via SendGrid or Resend API POST request
+    // 4. Send email via SMTP, SendGrid, or Resend API POST request
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
     const sendgridApiKey = process.env.SENDGRID_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
 
-    if (!sendgridApiKey && !resendApiKey) {
-      console.error('Neither SENDGRID_API_KEY nor RESEND_API_KEY is defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
+    if (!smtpUser && !smtpPass && !sendgridApiKey && !resendApiKey) {
+      console.error('Neither SMTP_USER, SENDGRID_API_KEY nor RESEND_API_KEY is defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
       await supabase
         .from('projects')
         .update({
@@ -814,7 +817,28 @@ export async function sendProjectReportEmail(projectId: string) {
 
     let setSent = false;
 
-    if (sendgridApiKey) {
+    if (smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass
+          }
+        });
+
+        await transporter.sendMail({
+          from: `"ProjectHub" <${smtpUser}>`,
+          to: callerEmail,
+          subject: subject,
+          html: emailBody
+        });
+
+        setSent = true;
+      } catch (smtpError) {
+        console.error(`Gmail SMTP sending failed for project ${projectId}:`, smtpError);
+      }
+    } else if (sendgridApiKey) {
       const fromEmail = process.env.EMAIL_FROM || 'reubenin12@gmail.com'; // Default verified Single Sender Gmail
       const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
