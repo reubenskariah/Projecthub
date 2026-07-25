@@ -59,16 +59,18 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
     const caller_dept = formData.get('caller_dept') as string;
     const caller_email = formData.get('caller_email') as string;
     const passkey = formData.get('passkey') as string;
-    const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
+    const team_size = parseInt(formData.get('slots_needed') as string, 10);
     const review_days = parseInt(formData.get('review_days') as string, 10);
 
-    if (!title || !abstract || !caller_name || !caller_dept || !caller_email || !passkey || isNaN(slots_needed) || isNaN(review_days)) {
+    if (!title || !abstract || !caller_name || !caller_dept || !caller_email || !passkey || isNaN(team_size) || isNaN(review_days)) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
-    if (slots_needed < 2 || slots_needed > 6) {
+    if (team_size < 2 || team_size > 6) {
       return { success: false, error: 'Team size must be between 2 and 6 participants.' };
     }
+
+    const slots_needed = team_size - 1;
 
     // Backend length limits for spam control
     if (title.length > 200) {
@@ -551,16 +553,18 @@ export async function updateProjectAsCreator(
     const title = formData.get('title') as string;
     const abstract = formData.get('abstract') as string;
     const caller_dept = formData.get('caller_dept') as string;
-    const slots_needed = parseInt(formData.get('slots_needed') as string, 10);
+    const team_size = parseInt(formData.get('slots_needed') as string, 10);
     const review_days = parseInt(formData.get('review_days') as string, 10);
 
-    if (!title || !abstract || !caller_dept || isNaN(slots_needed) || isNaN(review_days) || !callerEmail || !passkey) {
+    if (!title || !abstract || !caller_dept || isNaN(team_size) || isNaN(review_days) || !callerEmail || !passkey) {
       return { success: false, error: 'Missing or invalid fields in form submission.' };
     }
 
-    if (slots_needed < 2 || slots_needed > 6) {
+    if (team_size < 2 || team_size > 6) {
       return { success: false, error: 'Team size must be between 2 and 6 participants.' };
     }
+
+    const slots_needed = team_size - 1;
 
     // Backend length limits for spam control
     if (title.length > 200) {

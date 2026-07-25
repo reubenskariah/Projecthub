@@ -470,7 +470,7 @@ export default function HomePage() {
     setEditTitle(selectedProject.title);
     setEditAbstract(selectedProject.abstract);
     setEditDept(selectedProject.caller_dept);
-    setEditSlotsNeeded(selectedProject.slots_needed);
+    setEditSlotsNeeded(selectedProject.slots_needed + 1);
     setEditReviewDays(selectedProject.review_days);
     setEditKeywords(selectedProject.keywords || []);
     setCreatorEmail(loggedInEmail || '');
