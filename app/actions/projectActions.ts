@@ -391,11 +391,18 @@ export async function reserveProjectSlot(
       return { success: false, error: insertError.message };
     }
 
+    const isCompletedNow = status === 'confirmed' && confirmedCount + 1 === slotsNeeded;
+    if (isCompletedNow) {
+      await sendProjectReportEmail(projectId);
+    }
+
     return {
       success: true,
       status,
       data: inserted,
-      message: status === 'confirmed'
+      message: isCompletedNow
+        ? "Slot successfully reserved! All target slots are now filled and the project creator has been instantly notified by email."
+        : status === 'confirmed'
         ? "Slot successfully reserved! The project creator can now view your professional profile."
         : "The confirmed slots are full. You have been placed on the waitlist."
     };
@@ -669,6 +676,178 @@ export async function deleteProjectAsCreator(projectId: string, callerEmail: str
     return { success: true };
   } catch (err: unknown) {
     console.error('Error in deleteProjectAsCreator server action:', err);
+    return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
+  }
+}
+
+/**
+ * Sends a summary matching report of candidates to the project creator's email.
+ * This runs when a project's review window concludes or when it is fully matched early.
+ */
+export async function sendProjectReportEmail(projectId: string) {
+  if (!isDbConfigured()) return { success: false, error: 'Database not configured.' };
+  try {
+    // 1. Fetch project details and applicants
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('*, applicants(*)')
+      .eq('id', projectId)
+      .single();
+
+    if (fetchError || !project) {
+      console.error('Error fetching project for email summary report:', fetchError);
+      return { success: false, error: 'Project not found.' };
+    }
+
+    // Prevent duplicate emails
+    if (project.email_sent) {
+      return { success: true, message: 'Email has already been sent.' };
+    }
+
+    const callerEmail = project.caller_email;
+    if (!callerEmail) {
+      // Mark as sent to prevent loop blockages
+      await supabase.from('projects').update({ email_sent: true }).eq('id', projectId);
+      return { success: false, error: 'Creator email address is missing.' };
+    }
+
+    const applicants = project.applicants || [];
+    
+    // Build candidate list HTML table
+    let applicantsHtml = '';
+    if (applicants.length === 0) {
+      applicantsHtml = `<p style="font-style: italic; color: #4a6178; font-family: sans-serif;">No slot reservations were made for this project call.</p>`;
+    } else {
+      // Sort applicants by creation date
+      const sortedApplicants = [...applicants].sort(
+        (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+      );
+      
+      applicantsHtml = `
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-family: sans-serif; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #0f2a47; color: #ffffff; text-align: left;">
+              <th style="padding: 10px; border: 1px solid #c9d6d1;">Name</th>
+              <th style="padding: 10px; border: 1px solid #c9d6d1;">Dept/Sem</th>
+              <th style="padding: 10px; border: 1px solid #c9d6d1;">LinkedIn Profile</th>
+              <th style="padding: 10px; border: 1px solid #c9d6d1;">Match Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sortedApplicants.map((app) => `
+              <tr style="border-bottom: 1px solid #eef2ee;">
+                <td style="padding: 10px; border: 1px solid #c9d6d1; font-weight: bold; color: #0f2a47;">${app.name}</td>
+                <td style="padding: 10px; border: 1px solid #c9d6d1;">${app.dept_sem}</td>
+                <td style="padding: 10px; border: 1px solid #c9d6d1;">
+                  <a href="${app.linkedin_url.startsWith('http') ? app.linkedin_url : `https://${app.linkedin_url}`}" target="_blank" style="color: #2563EB; font-weight: 600; text-decoration: none;">
+                    View LinkedIn Profile
+                  </a>
+                </td>
+                <td style="padding: 10px; border: 1px solid #c9d6d1;">
+                  <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; ${
+                    app.status === 'confirmed' 
+                      ? 'background-color: #e6f4ea; color: #137333;' 
+                      : 'background-color: #fef7e0; color: #b06000;'
+                  }">
+                    ${app.status}
+                  </span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    const isEarlyCompletion = new Date().getTime() < new Date(project.expires_at).getTime();
+    
+    // Build clean HTML summary template
+    const emailBody = `
+      <div style="max-width: 600px; margin: 0 auto; padding: 24px; font-family: sans-serif; background-color: #ffffff; color: #0f2a47; border: 1.5px solid #0f2a47; box-shadow: 4px 4px 0 #0f2a47; border-radius: 4px;">
+        <h2 style="font-family: monospace; color: #0f2a47; border-bottom: 2px dashed #0f2a47; padding-bottom: 10px; margin-top: 0;">
+          ${isEarlyCompletion ? 'PROJECT MATCH COMPLETED (EARLY)' : 'PROJECT MATCHING REPORT'}
+        </h2>
+        <p>Hello <strong>${project.caller_name}</strong>,</p>
+        <p>
+          ${isEarlyCompletion 
+            ? `All target slots for your project call <strong>"${project.title}"</strong> have been successfully reserved early!` 
+            : `The review window for your project call <strong>"${project.title}"</strong> has concluded.`}
+          Here is the final summary of slot reservations and waitlist applications from your campus team match:
+        </p>
+        
+        <div style="background-color: #eef2ee; border: 1px solid #0f2a47; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+          <span style="font-family: monospace; font-size: 10px; text-transform: uppercase; color: #c68227; font-weight: bold; display: block; margin-bottom: 2px;">PROJECT SUMMARY</span>
+          <strong style="font-size: 15px; color: #0f2a47;">${project.title}</strong>
+          <div style="font-size: 11.5px; margin-top: 4px; color: #4a6178;">
+            Department: ${project.caller_dept} &middot; Total Target Slots: ${project.slots_needed} &middot; Review Window: ${project.review_days} days
+          </div>
+        </div>
+
+        <h3 style="font-family: monospace; font-size: 14px; text-transform: uppercase; color: #0f2a47; margin: 24px 0 8px 0; border-bottom: 1px dashed #c9d6d1; padding-bottom: 4px;">Candidate Applications</h3>
+        ${applicantsHtml}
+
+        <p style="margin-top: 24px; font-size: 12px; color: #4a6178; font-style: italic; border-top: 1px dashed #c9d6d1; padding-top: 10px;">
+          This matches the conclusion of your ProjectHub review window. Thank you for using ProjectHub!
+        </p>
+      </div>
+    `;
+
+    // 4. Send email via Resend API POST request
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY is not defined in environment variables. Marking status as closed and email_sent as true to prevent queue blockage.');
+      await supabase
+        .from('projects')
+        .update({
+          status: 'closed',
+          email_sent: true
+        })
+        .eq('id', projectId);
+      return { success: false, error: 'RESEND_API_KEY is not configured.' };
+    }
+
+    const fromEmail = process.env.EMAIL_FROM || 'ProjectHub <onboarding@resend.dev>';
+    const subject = isEarlyCompletion 
+      ? `Project Match Completed (Early): ${project.title}`
+      : `Project Match Complete: ${project.title}`;
+
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: callerEmail,
+        subject: subject,
+        html: emailBody
+      })
+    });
+
+    let setSent = false;
+    if (emailResponse.ok) {
+      setSent = true;
+    } else {
+      const errorText = await emailResponse.text();
+      console.error(`Resend API failed for project ${projectId}:`, errorText);
+      if (emailResponse.status === 400 || emailResponse.status === 401 || emailResponse.status === 403 || emailResponse.status === 422) {
+        setSent = true; // Mark as sent to prevent infinite loops
+      }
+    }
+
+    // 5. Always update status to closed and set the computed email_sent status
+    await supabase
+      .from('projects')
+      .update({
+        status: 'closed',
+        email_sent: setSent
+      })
+      .eq('id', projectId);
+
+    return { success: true };
+  } catch (err: unknown) {
+    console.error('Error in sendProjectReportEmail server action:', err);
     return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
 }
