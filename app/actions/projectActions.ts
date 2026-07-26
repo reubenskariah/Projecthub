@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase';
 import nodemailer from 'nodemailer';
+import { sendAdminNotification, getNotificationConfigStatus } from '@/lib/notifications';
 
 function isDbConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -127,6 +128,11 @@ export async function createProjectCall(formData: FormData, selectedKeywords: st
       console.error('Supabase error inserting project:', error);
       return { success: false, error: error.message };
     }
+
+    // Dispatch admin notification asynchronously to avoid blocking user response
+    sendAdminNotification(escapedTitle, caller_dept, escapedCallerName).catch((err) => {
+      console.error('Failed to send admin notification:', err);
+    });
 
     return { success: true, data };
   } catch (err: unknown) {
@@ -920,6 +926,13 @@ export async function sendProjectReportEmail(projectId: string) {
     console.error('Error in sendProjectReportEmail server action:', err);
     return { success: false, error: (err as Error).message || 'An unexpected error occurred.' };
   }
+}
+
+/**
+ * Returns the status of the admin alerts configuration.
+ */
+export async function getNotificationConfigState() {
+  return getNotificationConfigStatus();
 }
 
 

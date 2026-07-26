@@ -9,7 +9,8 @@ import {
   fetchMentors,
   addMentor,
   updateMentor,
-  deleteMentor
+  deleteMentor,
+  getNotificationConfigState
 } from '@/app/actions/projectActions';
 
 interface Applicant {
@@ -67,6 +68,7 @@ export default function AdminPage() {
   const [adminUser, setAdminUser] = useState('');
   const [adminPass, setAdminPass] = useState('');
   const [adminError, setAdminError] = useState(false);
+  const [notificationStatus, setNotificationStatus] = useState<{ configured: boolean; type: string | null } | null>(null);
 
   // Dashboard views: 'queue' (pending), 'directory' (active projects), or 'mentors'
   const [adminTab, setAdminTab] = useState<'queue' | 'directory' | 'mentors'>('queue');
@@ -158,6 +160,13 @@ export default function AdminPage() {
     }
     if (allRes.success && allRes.data) {
       setAllProjects(allRes.data as Project[]);
+    }
+
+    try {
+      const notifState = await getNotificationConfigState();
+      setNotificationStatus(notifState);
+    } catch (err) {
+      console.error('Failed to load notification config status:', err);
     }
 
     await loadMentorsData();
@@ -461,8 +470,31 @@ export default function AdminPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1.5px solid var(--blue-deep)', paddingBottom: '14px', gap: '16px', flexWrap: 'wrap' }}>
               <div>
                 <h1 style={{ fontFamily: 'var(--mono)', fontSize: '28px', margin: 0 }}>Admin Portal</h1>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--amber-dim)', fontWeight: 'bold', marginTop: '4px' }}>
-                  SECURED ACCESS ACTIVE
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--amber-dim)', fontWeight: 'bold' }}>
+                    SECURED ACCESS ACTIVE
+                  </div>
+                  {notificationStatus && (
+                    <div style={{ 
+                      fontFamily: 'var(--mono)', 
+                      fontSize: '11px', 
+                      fontWeight: 'bold', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '5px',
+                      color: notificationStatus.configured ? 'var(--ok)' : 'var(--danger)'
+                    }}>
+                      <span style={{ 
+                        width: '8px', 
+                        height: '8px', 
+                        borderRadius: '50%', 
+                        backgroundColor: notificationStatus.configured ? 'var(--ok)' : 'var(--danger)',
+                        display: 'inline-block',
+                        boxShadow: notificationStatus.configured ? '0 0 6px var(--ok)' : '0 0 6px var(--danger)'
+                      }} />
+                      ALERTS: {notificationStatus.configured ? `ACTIVE (${notificationStatus.type?.toUpperCase()})` : 'INACTIVE (TELEGRAM NOT CONFIGURED)'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
