@@ -1641,17 +1641,19 @@ export default function HomePage() {
       {isIdeaBoxOpen && (
         <div className="overlay show" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) setIsIdeaBoxOpen(false); }}>
           <div className="modal max-w-[600px] m-auto" style={{ width: '92%' }}>
-            <div className="modal-head">
-              <div>
-                <div className="card-dept">Resources</div>
-                <h2>💡 Need a Project Idea?</h2>
+            <div className="modal-head" style={{ flexDirection: 'column', gap: '8px', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                <div>
+                  <div className="card-dept">Resources</div>
+                  <h2 style={{ margin: 0 }}>Need a Project Idea?</h2>
+                </div>
+                <button className="modal-close cursor-pointer" onClick={() => setIsIdeaBoxOpen(false)}>✕</button>
               </div>
-              <button className="modal-close cursor-pointer" onClick={() => setIsIdeaBoxOpen(false)}>✕</button>
-            </div>
-            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              <p style={{ fontSize: '14.5px', color: 'var(--ink)', fontWeight: 600, lineHeight: 1.45, marginBottom: '4px' }}>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#eef2ee', opacity: 0.9, fontWeight: 500, lineHeight: 1.4 }}>
                 &ldquo;Are you struggling to find an idea? Here are some links that will really help you.&rdquo;
               </p>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', marginTop: '10px' }}>
                 {IDEA_LINKS.map((item, index) => (
