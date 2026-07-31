@@ -1276,3 +1276,105 @@ footer {
   border-color: #c1502e !important;
 }
 
+/* ---------- Idea Box Floating Trigger ---------- */
+.idea-box-floating {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 50;
+  cursor: pointer;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2.5px solid var(--amber);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: gentle-shake 3s ease-in-out infinite;
+}
+
+.idea-box-floating:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  animation-play-state: paused;
+}
+
+.idea-box-logo {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+}
+
+/* Shake for 1 sec, rest for 2 sec (loop is 3 seconds total) */
+@keyframes gentle-shake {
+  0% { transform: rotate(0deg); }
+  3.3% { transform: rotate(-5deg); }
+  6.6% { transform: rotate(5deg); }
+  10% { transform: rotate(-4deg); }
+  13.3% { transform: rotate(4deg); }
+  16.6% { transform: rotate(-2deg); }
+  20% { transform: rotate(2deg); }
+  23.3% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Idea Link Card inside modal */
+.idea-link-card {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--blue-deep);
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.idea-link-card:hover {
+  background: var(--white);
+  border-color: var(--amber);
+  transform: translateY(-1.5px);
+  box-shadow: 2px 2px 0 var(--amber);
+}
+
+.idea-link-name {
+  font-weight: 600;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Dark mode overrides */
+.dark .idea-box-floating {
+  background: var(--white); /* keep white background for standard image visibility */
+  border-color: var(--amber);
+}
+
+.dark .idea-link-card {
+  color: var(--cyan-line);
+  background: var(--blue-deep);
+  border-color: var(--paper-line);
+}
+
+.dark .idea-link-card:hover {
+  background: var(--blue-mid);
+  border-color: var(--cyan-line);
+  box-shadow: 2px 2px 0 var(--cyan-line);
+}
+
+@media (max-width: 768px) {
+  .idea-box-floating {
+    bottom: 16px;
+    left: 16px;
+    width: 55px;
+    height: 55px;
+    border-width: 2px;
+  }
+}
+

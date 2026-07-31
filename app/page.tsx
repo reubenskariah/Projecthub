@@ -48,6 +48,13 @@ const DEFAULT_MENTORS: Mentor[] = [
   { id: "6", name: "Dr. Pillai", college: "College of Engineering", dept: "CE", contact: "pillai.civil@college.edu" }
 ];
 
+const IDEA_LINKS = [
+  { name: 'Hackster.io', url: 'https://www.hackster.io/' },
+  { name: 'Hackaday.io', url: 'https://hackaday.io/' },
+  { name: 'Instructables Circuits', url: 'https://www.instructables.com/circuits/' },
+  { name: 'GitLab', url: 'https://about.gitlab.com/' }
+];
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'feed' | 'mentors'>('feed');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -64,6 +71,7 @@ export default function HomePage() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isIdeaBoxOpen, setIsIdeaBoxOpen] = useState(false);
   
   // Application form states
   const [applyName, setApplyName] = useState('');
@@ -1098,7 +1106,7 @@ export default function HomePage() {
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontFamily: 'var(--mono)', fontSize: '14.5px', color: 'var(--ink)' }}>1. Create &amp; Secure Project Call</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-soft)', lineHeight: 1.45 }}>
-                    Click the &quot;+ Call for a project&quot; button. Enter your details and email. Enforce access security by setting a robust <strong>8-character Secret Passkey</strong> (which must contain a capital letter, lowercase letter, number, and special character). Select tags and set a review window of 1 to 14 days.
+                    Click the &quot;+ Call for a project&quot; button. Enter your details and email. Enforce access security by setting a robust <strong>8-character Secret Passkey</strong> (which must contain a capital letter, lowercase letter, number, and special character). Select tags and set a review window of 1 to 50 days.
                   </p>
                 </div>
               </div>
@@ -1264,15 +1272,18 @@ export default function HomePage() {
                   <div className="form-row">
                     <div className="form-field">
                       <label>Team Size (incl. you)</label>
-                      <input
-                        type="number"
+                      <select
                         name="slots_needed"
-                        min={2}
-                        max={6}
                         value={editSlotsNeeded}
                         onChange={(e) => setEditSlotsNeeded(parseInt(e.target.value, 10))}
                         required
-                      />
+                      >
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                        <option value={5}>5</option>
+                        <option value={6}>6</option>
+                      </select>
                     </div>
                     <div className="form-field">
                       <label>Review Window (days)</label>
@@ -1280,7 +1291,7 @@ export default function HomePage() {
                         type="number"
                         name="review_days"
                         min={1}
-                        max={14}
+                        max={50}
                         value={editReviewDays}
                         onChange={(e) => setEditReviewDays(parseInt(e.target.value, 10))}
                         required
@@ -1620,6 +1631,46 @@ export default function HomePage() {
         <span>➕</span>
         <span>Call</span>
       </button>
+
+      {/* Floating Idea Box Button */}
+      <div className="idea-box-floating cursor-pointer" onClick={() => setIsIdeaBoxOpen(true)} title="Need a Project Idea?">
+        <img src="/idea_box.png" alt="Idea Box" className="idea-box-logo" />
+      </div>
+
+      {/* MODAL 4: Idea Box Modal */}
+      {isIdeaBoxOpen && (
+        <div className="overlay show" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) setIsIdeaBoxOpen(false); }}>
+          <div className="modal max-w-[600px] m-auto" style={{ width: '92%' }}>
+            <div className="modal-head">
+              <div>
+                <div className="card-dept">Resources</div>
+                <h2>💡 Need a Project Idea?</h2>
+              </div>
+              <button className="modal-close cursor-pointer" onClick={() => setIsIdeaBoxOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <p style={{ fontSize: '14.5px', color: 'var(--ink)', fontWeight: 600, lineHeight: 1.45, marginBottom: '4px' }}>
+                &ldquo;Are you struggling to find an idea? Here are some links that will really help you.&rdquo;
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                {IDEA_LINKS.map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="idea-link-card"
+                  >
+                    <span style={{ marginRight: '8px' }}>🔗</span>
+                    <span className="idea-link-name">{item.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
