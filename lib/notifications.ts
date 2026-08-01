@@ -5,16 +5,12 @@
  */
 
 export async function sendAdminNotification(projectTitle: string, dept: string, callerName: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
   // Build a neat text block for messaging
   const message = `🔔 *New Project Approval Waiting* 🔔\n\n` +
                   `A new project call has been submitted:\n` +
                   `• *Title*: ${projectTitle}\n` +
                   `• *Department*: ${dept}\n` +
-                  `• *Creator*: ${callerName}\n\n` +
-                  `Please visit the Admin Portal to review:\n` +
-                  `${appUrl}/admin`;
+                  `• *Creator*: ${callerName}`;
 
   // 1. Telegram (Preferred & Chosen Option)
   const tgToken = process.env.TELEGRAM_BOT_TOKEN;
