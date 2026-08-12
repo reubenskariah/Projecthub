@@ -1029,32 +1029,21 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand" onclick="switchPage('feed')" style="cursor: pointer;">
-        <svg style="height: 38px; width: auto; display: block;" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg style="height: 38px; width: auto; display: block;" viewBox="0 0 500 100" fill="none"
+          xmlns="http://www.w3.org/2000/svg">
           <g>
             <path d="M45 40 L75 40" stroke="#2563EB" stroke-width="4" stroke-linecap="round" />
             <path d="M45 75 L75 75" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
             <path d="M45 40 L45 75" stroke="#eef2ee" stroke-width="6" stroke-linecap="round" />
-            <path 
-              d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" 
-              stroke="#2563EB" 
-              stroke-width="6" 
-              stroke-linecap="round" 
-              fill="none" 
-            />
+            <path d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" stroke="#2563EB" stroke-width="6"
+              stroke-linecap="round" fill="none" />
             <circle cx="45" cy="40" r="8" fill="#eef2ee" />
             <circle cx="75" cy="40" r="8" fill="#2563EB" />
             <circle cx="45" cy="75" r="8" fill="#94A3B8" />
             <circle cx="75" cy="75" r="5" fill="#38BDF8" />
           </g>
-          <text 
-            x="110" 
-            y="72" 
-            fill="#eef2ee" 
-            font-family="var(--sans)" 
-            font-weight="800" 
-            font-size="64" 
-            letter-spacing="-1"
-          >
+          <text x="110" y="72" fill="#eef2ee" font-family="var(--sans)" font-weight="800" font-size="64"
+            letter-spacing="-1">
             project<tspan fill="#2563EB" font-weight="900">hub</tspan>
           </text>
         </svg>
@@ -1081,51 +1070,55 @@
         <!-- Region 1: Left Side -->
         <div class="hero-region-left"
           style="padding: 32px 32px 24px; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; min-height: 290px; gap: 14px;">
-          
-          <!-- Top content block (Logo Icon and Logo Name + Quote) -->
-          <div style="display: flex; align-items: flex-start; gap: 18px; width: 100%; text-align: left; margin-bottom: 12px;">
+
+          <!-- Top content block (Splitting Logo Icon and Text for Perfect Vertical Alignment) -->
+          <div style="display: flex; align-items: flex-start; gap: 18px; width: 100%; text-align: left;">
             <!-- Left: Logo Icon SVG (Enlarged) -->
             <div style="flex-shrink: 0; margin-top: 2px;">
-              <svg style="width: 84px; height: auto; display: block;" viewBox="20 20 70 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg style="width: 84px; height: auto; display: block;" viewBox="20 20 70 60" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
                 <path d="M45 40 L75 40" stroke="#2563EB" stroke-width="4" stroke-linecap="round" />
                 <path d="M45 75 L75 75" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
                 <path d="M45 40 L45 75" stroke="#1E293B" stroke-width="6" stroke-linecap="round" />
-                <path 
-                  d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" 
-                  stroke="#2563EB" 
-                  stroke-width="6" 
-                  stroke-linecap="round" 
-                  fill="none" 
-                />
+                <path d="M45 25 C75 25, 85 40, 85 50 C85 60, 75 70, 45 70" stroke="#2563EB" stroke-width="6"
+                  stroke-linecap="round" fill="none" />
                 <circle cx="45" cy="40" r="8" fill="#1E293B" />
                 <circle cx="75" cy="40" r="8" fill="#2563EB" />
                 <circle cx="45" cy="75" r="8" fill="#94A3B8" />
                 <circle cx="75" cy="75" r="5" fill="#38BDF8" />
               </svg>
             </div>
-            
-            <!-- Right: Logo Name and Quote -->
+
+            <!-- Right: Logo Name, Quote, Heading, and Description (Perfect Left Alignment) -->
             <div style="display: flex; flex-direction: column; gap: 0; flex: 1;">
               <!-- Logo Name (Bigger size, aligned left, close to icon) -->
-              <h1 style="font-family: var(--sans); font-weight: 800; font-size: 72px; color: #0f2a47; margin: 0; line-height: 0.85; letter-spacing: -2.5px;">project<span style="color: #2563EB; font-weight: 900;">hub</span></h1>
-              
-              <!-- Quote (Placed below name with a gap, color matching logo blue, uppercase, no quotes, sans font, shifted 0.3cm down and aligned below the 'r') -->
-              <div class="hero-quote" style="font-family: var(--sans); font-size: 14px; letter-spacing: -0.1px; color: #2563EB; font-weight: 700; text-transform: uppercase; padding-left: 40px; margin-top: 11px; line-height: 1.1;">
-                you and your idea are not alone!
+              <h1
+                style="font-family: var(--sans); font-weight: 800; font-size: 72px; color: #0f2a47; margin: 0 0 6px 0; line-height: 0.85; letter-spacing: -2.5px;">
+                project<span style="color: #2563EB; font-weight: 900;">hub</span></h1>
+
+              <!-- Indented Container starting below 'r' of projecthub -->
+              <div
+                style="padding-left: 40px; display: flex; flex-direction: column; gap: 0; text-align: left; width: 100%;">
+                <!-- Quote (Placed below name with a gap, color matching logo blue, uppercase, no quotes, sans font to keep words closer, shifted 0.3cm down) -->
+                <div class="hero-quote"
+                  style="font-family: var(--sans); font-size: 14px; letter-spacing: -0.1px; color: #2563EB; font-weight: 700; text-transform: uppercase; margin-top: 11px; margin-bottom: 12px; line-height: 1.1;">
+                  you and your idea are not alone!
+                </div>
+
+                <!-- Heading: Our Aim -->
+                <div
+                  style="font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber-dim); font-weight: 700; margin-bottom: 6px;">
+                  Our Aim
+                </div>
+
+                <!-- Subtitle sentence (matching logo deep blue color) -->
+                <div
+                  style="font-family: var(--sans); font-size: 13.5px; color: #0f2a47; line-height: 1.45; max-width: 400px; font-weight: 500;">
+                  No student should have to build their vision alone. <span
+                    style="color: #2563EB; font-weight: 700;">ProjectHub</span> ensures that great ideas always find
+                  their team.
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <!-- Bottom text block (Aligned to the starting edge of the logo icon) -->
-          <div style="display: flex; flex-direction: column; gap: 0; width: 100%; text-align: left; padding-left: 8px; margin-bottom: 8px;">
-            <!-- Heading: Our Aim -->
-            <div style="font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber-dim); font-weight: 700; margin-bottom: 6px;">
-              Our Aim
-            </div>
-            
-            <!-- Subtitle sentence (matching logo deep blue color) -->
-            <div style="font-family: var(--sans); font-size: 13.5px; color: #0f2a47; line-height: 1.5; max-width: 460px; font-weight: 500;">
-              No student should have to build their vision alone. <span style="color: #2563EB; font-weight: 700;">ProjectHub</span> ensures that great ideas always find their team. We bridge the gap between imagination and execution by simplifying how teams form on campus. Through quick slot-reservations and professional LinkedIn integration, we help you build your future, together.
             </div>
           </div>
 
@@ -1213,6 +1206,9 @@
     <main class="grid" id="grid"></main>
     <div class="empty-state" id="emptyState" style="display:none;">NO MATCHES IN RANGE — try clearing a filter or a
       different keyword.</div>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
   </div>
 
   <!-- MENTORS VIEW -->
@@ -1235,6 +1231,9 @@
     </section>
 
     <main class="grid" id="mentorsGrid"></main>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
   </div>
 
   <!-- ADMIN VIEW -->
@@ -1359,6 +1358,10 @@
         </div>
       </div>
     </div>
+
+    <footer>PROJECTHUB PROTOTYPE — Next.js &middot; Supabase &middot; Vercel &middot; Cloudflare Turnstile — this demo
+      runs entirely in your browser, nothing is saved after you leave.</footer>
+  </div>
 
   <!-- How it works modal -->
   <div class="overlay" id="howItWorksOverlay">
